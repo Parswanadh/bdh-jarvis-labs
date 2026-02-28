@@ -50,6 +50,59 @@ Trains Multi-Scale BDH for 5 epochs with optimizations.
 
 ---
 
+## 📤 Upload & Download Model
+
+### After Training Completes (On Jarvis Labs)
+
+```bash
+# Upload trained model to GitHub
+chmod +x upload_to_github.sh
+./upload_to_github.sh
+```
+
+This will:
+- Commit checkpoints to git
+- Push to GitHub repository
+- Make model available from anywhere
+
+### Download Model (On Your Local Machine)
+
+```bash
+# Clone or pull latest from GitHub
+git clone https://github.com/Parswanadh/bdh-jarvis-labs
+cd bdh-jarvis-labs
+
+# Or if already cloned:
+git pull origin master
+
+# Run download script
+chmod +x download_from_github.sh
+./download_from_github.sh
+```
+
+### Test Downloaded Model
+
+```bash
+# Quick test
+python test_downloaded_model.py
+```
+
+Or use in your code:
+```python
+from implementation.multiscale_bdh import MultiScaleBDH
+import torch
+
+# Load checkpoint
+checkpoint = torch.load('checkpoints/bdh_a100/checkpoint_best.pt')
+model = MultiScaleBDH(checkpoint['config'])
+model.load_state_dict(checkpoint['model_state_dict'])
+
+# Generate text
+text = model.generate("The future of AI is", max_tokens=100)
+```
+
+---
+
 ## ⚙️ Configuration (if you want to customize)
 
 ### Generate More Data
