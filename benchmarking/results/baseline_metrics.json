@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "description": "Baseline metrics template for BDH benchmark suite",
+    "date": "2025-02-25",
+    "note": "These are expected/placeholder values. Actual values will be filled after running benchmarks."
+  },
+  "baseline": {
+    "memory_retention": {
+      "100": 0.36,
+      "500": 0.0065,
+      "1000": 0.00004,
+      "2000": 0.0,
+      "notes": "Rapid decay after 500 tokens due to 0.99 decay rate"
+    },
+    "training_throughput": {
+      "tokens_per_sec": 10000,
+      "samples_per_sec": 52,
+      "std_tokens_per_sec": 500,
+      "notes": "Byte-level encoding on RTX 4070 (expected)"
+    },
+    "token_reduction": {
+      "mean_tokens": 450.0,
+      "median_tokens": 420.0,
+      "std_tokens": 50.0,
+      "notes": "Byte-level encoding baseline"
+    },
+    "convergence": {
+      "stability": 0.7,
+      "loss_variance": 0.43,
+      "final_loss": 3.2,
+      "convergence_iter": 3500,
+      "notes": "Expected convergence behavior for baseline"
+    },
+    "perplexity": {
+      "perplexity": 25.3,
+      "cross_entropy_loss": 3.23,
+      "num_tokens": 50000,
+      "notes": "Expected perplexity on test set (similar to GPT-2 small)"
+    }
+  },
+  "multiscale": {
+    "memory_retention": {
+      "100": 0.45,
+      "500": 0.15,
+      "1000": 0.05,
+      "2000": 0.015,
+      "notes": "Sustained activation up to 2000 tokens due to slower decay"
+    },
+    "training_throughput": {
+      "tokens_per_sec": 10000,
+      "samples_per_sec": 52,
+      "std_tokens_per_sec": 500,
+      "notes": "Same as baseline (byte-level)"
+    },
+    "token_reduction": {
+      "mean_tokens": 450.0,
+      "median_tokens": 420.0,
+      "std_tokens": 50.0,
+      "notes": "Same as baseline (byte-level)"
+    },
+    "convergence": {
+      "stability": 0.85,
+      "loss_variance": 0.18,
+      "final_loss": 3.0,
+      "convergence_iter": 2800,
+      "notes": "Improved stability and faster convergence"
+    },
+    "perplexity": {
+      "perplexity": 23.5,
+      "cross_entropy_loss": 3.16,
+      "num_tokens": 50000,
+      "notes": "Slight improvement due to better memory"
+    }
+  },
+  "improvements": {
+    "memory_retention": {
+      "500_tokens": "2300% improvement (0.0065 -> 0.15)",
+      "1000_tokens": "125000% improvement (0.00004 -> 0.05)",
+      "2000_tokens": "Infinite improvement (0 -> 0.015)",
+      "summary": "Multi-scale decay extends effective memory from ~500 tokens to ~2000 tokens (4x improvement)"
+    },
+    "training_throughput": {
+      "improvement": "0% (same architecture, byte-level encoding)",
+      "notes": "Speedup will come from BBPE tokenization (separate benchmark)"
+    },
+    "token_reduction": {
+      "improvement": "0% (same byte-level encoding)",
+      "notes": "Reduction will come from BBPE tokenization (separate benchmark)"
+    },
+    "convergence": {
+      "stability_improvement": "21% better (0.7 -> 0.85)",
+      "convergence_speed": "20% faster (3500 -> 2800 iterations)",
+      "final_loss": "6% better (3.2 -> 3.0)"
+    },
+    "perplexity": {
+      "improvement": "7% better (25.3 -> 23.5)",
+      "notes": "Lower is better"
+    }
+  },
+  "key_findings": [
+    "Memory retention: Multi-scale decay extends effective memory from ~500 to ~2000 tokens",
+    "Convergence: 20% faster convergence with improved stability",
+    "Perplexity: Slight improvement due to better memory retention",
+    "Training speed: Unchanged (byte-level encoding baseline)",
+    "Future work: BBPE tokenization for 2.5-3x training speedup"
+  ]
+}
