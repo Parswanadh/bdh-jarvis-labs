@@ -8,79 +8,72 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).parent / "implementation"))
 from multiscale_bdh import MultiScaleBDH, MultiScaleBDHConfig
 
-def test_model(prompt, max_tokens=100):
+def test_hatchling(prompt, max_tokens=100):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    # 1. Load Tokenizer
-    model_name = "Qwen3.5-0.8B" if Path("Qwen3.5-0.8B").exists() else "Qwen/Qwen2.5-0.5B"
+    # 1. Load Tokenizer & Model Head Size
+    model_name = "Qwen3.5-0.8B"
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-
-    # 2. Setup Model Config
+    
+    # Matches the 'train_laptop_safe.py' architecture exactly
     config = MultiScaleBDHConfig(
-        vocab_size=len(tokenizer),
-        n_embd=192,
-        n_layer=3,
-        n_head=4,
-        ffn_dim=768,
-        dropout=0.0,
-        max_seq_len=80,
+        vocab_size=248320, # Qwen 3.5 actual head size
+        n_embd=256,
+        n_layer=8,
+        n_head=8,
+        ffn_dim=1024,
+        max_seq_len=192,
         decay_rates=[0.95, 0.99, 0.995],
-        hebbian_lr=0.001
+        hebbian_lr=0.0005
     )
 
-    # 3. Load Model
+    # 2. Load Model
     model = MultiScaleBDH(config).to(device)
-    checkpoint_path = Path("checkpoints/final/latest.pt")
+    checkpoint_path = Path("checkpoints/safe/laptop_safe.pt")
     
-    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
-    if 'model' in checkpoint:
-        model.load_state_dict(checkpoint['model'])
-    else:
-        model.load_state_dict(checkpoint)
-    
+    if not checkpoint_path.exists():
+        print("Error: No checkpoint found in checkpoints/safe/laptop_safe.pt")
+        return
+
+    print(f"Loading checkpoint from {checkpoint_path}...")
+    ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    model.load_state_dict(ckpt['model'])
+    print(f"Model loaded (Trained to Step {ckpt['step']})")
     model.eval()
 
-    # 4. Custom Generation with Sliding Window
+    # 3. Generation Loop
     print(f"\nPrompt: {prompt}")
-    print("-" * 30)
+    print("-" * 40)
     
     input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
-    
     generated = input_ids
     
     with torch.no_grad():
         for _ in range(max_tokens):
-            # SLIDING WINDOW: Only take the last 80 tokens
-            window = generated[:, -80:]
-            
-            # Get logits
+            # Sliding window for 192 seq len
+            window = generated[:, -192:]
             logits, _ = model(window)
             
-            # Focus on the last token produced
-            next_token_logits = logits[:, -1, :] / 0.8 # Temperature
-            
-            # Sample
+            # Sample next token
+            next_token_logits = logits[:, -1, :] / 0.7 # Slightly more creative temperature
             probs = F.softmax(next_token_logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)
             
-            # Append
             generated = torch.cat([generated, next_token], dim=1)
-            
-            # Stop if EOS token is generated
             if next_token.item() == tokenizer.eos_token_id:
                 break
     
     response = tokenizer.decode(generated[0], skip_special_tokens=True)
     print(f"Result:\n{response}")
-    print("-" * 30)
+    print("-" * 40)
 
 if __name__ == "__main__":
     prompts = [
         "Once upon a time, there was a little boy named Tim who loved",
-        "Lily was a very happy girl. One day, she found a",
-        "The big cat sat on the",
+        "One day, Lily went to the park and found a",
+        "The sun was shining and the birds were"
     ]
     
     for p in prompts:
-        test_model(p)
+        test_hatchling(p)
         print("\n")

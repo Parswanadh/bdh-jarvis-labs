@@ -6,6 +6,15 @@
 - **Team:** 14 specialized agents
 - **Goal:** Prepare winning science fair demo and presentation
 
+## BitbyBit Custom GPU Project (D:\projects\bitbybit)
+- Custom GPU for LLM inference with 4×4 systolic array, Q8.8 fixed-point
+- Has INT4 pack/unpack, fused_dequantizer, variable_precision_alu (4/8/16-bit modes)
+- Key insight: fused_dequantizer uses 4-bit scale/offset — needs upgrade for real Q4_0
+- Q4_0 format: block_size=32, FP16 scale, hardcoded zero-point=8, dequant = d*(q-8)
+- INT4×INT8 product needs 12 bits; 32-bit acc handles K up to 1M+
+- Best test model: TinyStories-33M (4 layers, dim=256, ~9MB Q4_0)
+- Created: docs/Q4_quantization_formats.md — comprehensive format reference
+
 ## Key Research Findings - Science Fair Strategies (2024-2025)
 
 ### Critical Success Factors

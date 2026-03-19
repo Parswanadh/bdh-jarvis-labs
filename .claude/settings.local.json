@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(where python:*)",
+      "Bash(pip list:*)",
+      "Bash(dir:*)",
+      "Bash(pip install:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(tasklist:*)"
+    ]
+  },
   "enabledPlugins": {
     "ai-ml-toolkit@claude-code-templates": true,
     "code-review-ai@claude-code-workflows": true,

@@ -54,12 +54,13 @@ class DistillationCollator:
     def __call__(self, batch_texts):
         """
         For each batch:
-        1. Tokenize texts
+        1. Tokenize texts with teacher tokenizer
         2. Get TEACHER LOGITS
-        3. Return both inputs and teacher_logits
+        3. Convert texts to bytes for student (vocab=256)
+        4. Return both inputs and teacher_logits
         """
 
-        # Tokenize
+        # Tokenize with teacher tokenizer
         encodings = self.tokenizer(
             batch_texts,
             padding=True,
@@ -68,16 +69,35 @@ class DistillationCollator:
             return_tensors="pt"
         )
 
-        input_ids = encodings['input_ids'].to(self.device)
+        teacher_input_ids = encodings['input_ids'].to(self.device)
 
         # Get TEACHER LOGITS (probability distribution)
         with torch.no_grad():
-            outputs = self.teacher(input_ids)
-            teacher_logits = outputs.logits  # [batch, seq, vocab_size]
+            outputs = self.teacher(teacher_input_ids)
+            teacher_logits = outputs.logits  # [batch, seq, teacher_vocab_size]
+
+        # Convert texts to byte-level tokens for student (vocab_size=256)
+        batch_byte_tensors = []
+        for text in batch_texts:
+            # Convert to UTF-8 bytes
+            byte_list = list(text.encode('utf-8')[:self.max_seq_len])
+            byte_tensor = torch.tensor(byte_list, dtype=torch.long)
+            batch_byte_tensors.append(byte_tensor)
+
+        # Pad byte tensors to same length
+        max_len = max(t.size(0) for t in batch_byte_tensors)
+        padded = []
+        for t in batch_byte_tensors:
+            if t.size(0) < max_len:
+                pad = torch.zeros(max_len - t.size(0), dtype=torch.long)
+                t = torch.cat([t, pad])
+            padded.append(t)
+
+        student_input_ids = torch.stack(padded).to(self.device)
 
         return {
-            'input_ids': input_ids,
-            'teacher_logits': teacher_logits  # ← Teacher's thinking!
+            'input_ids': student_input_ids,  # Byte-level for student
+            'teacher_logits': teacher_logits  # Teacher's thinking!
         }
 
 
@@ -181,7 +201,7 @@ def save_checkpoint(model, optimizer, epoch, loss, checkpoint_dir):
         best_loss = torch.load(best_file)['loss']
         if loss < best_loss:
             torch.save(checkpoint, best_file)
-            print(f"[BEST] New best! {best_loss:.4f} → {loss:.4f}")
+            print(f"[BEST] New best! {best_loss:.4f} -> {loss:.4f}")
 
 
 def main():
@@ -201,9 +221,9 @@ def main():
         print(f"[VRAM] {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
     print()
 
-    # Load TEACHER model (open, no auth)
-    print("[TEACHER] Loading Phi-2 (2.7B params, OPEN model)")
-    teacher_name = "microsoft/phi-2"
+    # Load TEACHER model (TinyLlama - modern, open, fast download)
+    print("[TEACHER] Loading TinyLlama-1.1B-Chat-v1.0 (1.1B params, OPEN model)")
+    teacher_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
     try:
         teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_name)
@@ -217,8 +237,8 @@ def main():
         print(f"[OK] Teacher loaded: {teacher_params:,} parameters")
     except Exception as e:
         print(f"[ERROR] {e}")
-        print("[FALLBACK] Trying TinyLlama...")
-        teacher_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+        print("[FALLBACK] Trying Qwen...")
+        teacher_name = "Qwen/Qwen2.5-0.5B"
         teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_name)
         teacher_model = AutoModelForCausalLM.from_pretrained(
             teacher_name,
@@ -294,12 +314,12 @@ def main():
     )
 
     # Training
-    epochs = 3
+    epochs = 50
     print("[TRAINING] Starting TRUE distillation")
     print("="*70)
     print("For EACH batch:")
-    print("  1. Input → Teacher → LOGITS")
-    print("  2. Input → Student → LOGITS")
+    print("  1. Input -> Teacher -> LOGITS")
+    print("  2. Input -> Student -> LOGITS")
     print("  3. Student learns from teacher's data")
     print("="*70)
     print()
