@@ -142,16 +142,16 @@ class LinearAttention(nn.Module):
 
         Returns:
             output: [batch, seq_len, n_embd]
-            state: Updated [n_embd, n_embd] if return_state
+            state: Updated [n_embd] if return_state
         """
         B, T, C = x.shape
         H = self.n_head
         D = self.head_dim
 
         # Compute Q, K, V projections
-        Q = self.Wq(x).view(B, T, H, D)  # [B, T, H, D]
-        K = self.Wk(x).view(B, T, H, D)  # [B, T, H, D]
-        V = self.Wv(x).view(B, T, H, D)  # [B, T, H, D]
+        Q = self.Wq(x).view(B, T, H, D).transpose(1, 2)  # [B, H, T, D]
+        K = self.Wk(x).view(B, T, H, D).transpose(1, 2)  # [B, H, T, D]
+        V = self.Wv(x).view(B, T, H, D).transpose(1, 2)  # [B, H, T, D]
 
         # Apply RoPE position encoding
         cos, sin = self.rope(Q, T)
@@ -162,10 +162,10 @@ class LinearAttention(nn.Module):
         # This is O(N) instead of O(N²) for softmax attention
         K_T = K.transpose(-2, -1)  # [B, H, D, T]
         attn = torch.matmul(K_T, V)  # [B, H, D, D]
-        attn = torch.matmul(Q, attn)  # [B, T, H, D]
+        attn = torch.matmul(Q, attn)  # [B, H, T, D]
 
         # Concatenate heads
-        attn = attn.contiguous().view(B, T, C)  # [B, T, C]
+        attn = attn.transpose(1, 2).contiguous().view(B, T, C)  # [B, T, C]
 
         # Output projection
         out = self.Wo(attn)
@@ -176,12 +176,12 @@ class LinearAttention(nn.Module):
         # where ⊙ is outer product averaged over sequence
         if return_state:
             if state is None:
-                state = torch.zeros(C, C, device=x.device, dtype=x.dtype)
+                state = torch.zeros(C, device=x.device, dtype=x.dtype)
 
             # Compute Hebbian update: outer product of Q and V
             # Average over batch and sequence
-            Q_flat = Q.mean(dim=(0, 1))  # [H, D]
-            V_flat = V.mean(dim=(0, 1))  # [H, D]
+            Q_flat = Q.mean(dim=(0, 2))  # [H, D]
+            V_flat = V.mean(dim=(0, 2))  # [H, D]
             hebbian_update = torch.einsum('hd,hd->hd', Q_flat, V_flat)  # [H, D]
 
             # Update state with decay and Hebbian learning
@@ -372,7 +372,7 @@ class BDHGPUTensor(nn.Module):
 
         Args:
             idx: Input token indices [batch, seq_len]
-            state: Previous state matrix [n_embd, n_embd]
+            state: Previous state vector [n_embd]
             return_state: Whether to return updated state
 
         Returns:
