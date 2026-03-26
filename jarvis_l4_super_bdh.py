@@ -58,6 +58,11 @@ def distill_loss_topk(student_logits: torch.Tensor, top_idx: torch.Tensor, top_v
     shift_idx = top_idx[:, :-1, :].contiguous()
     shift_vals = top_vals[:, :-1, :].contiguous()
 
+    vocab = shift_s.size(-1)
+    if shift_idx.numel() > 0:
+        shift_idx = shift_idx.clamp(min=0, max=vocab - 1)
+    shift_l = shift_l.clamp(min=0, max=vocab - 1)
+
     s_top = torch.gather(shift_s, dim=-1, index=shift_idx)
     t_probs = F.softmax(shift_vals.float() / 2.0, dim=-1)
     s_log_probs = F.log_softmax(s_top.float() / 2.0, dim=-1)
@@ -143,7 +148,7 @@ def main():
         dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=2,
+        num_workers=0,
         collate_fn=collate_text,
         pin_memory=True,
         drop_last=True,
@@ -152,14 +157,25 @@ def main():
     # tokenization/teacher
     teachers = []
     tok_ref: Optional[AutoTokenizer] = None
+    teacher_vocab_size: Optional[int] = None
     for i in range(args.teacher_replicas):
         t_model, t_tok = load_4bit_teacher(args.teacher_model)
         teachers.append(t_model)
         tok_ref = t_tok
+        if teacher_vocab_size is None:
+            teacher_vocab_size = int(t_model.config.vocab_size)
         print(f"[teacher] loaded replica {i+1}/{args.teacher_replicas}")
 
     assert tok_ref is not None
-    student = make_student(vocab_size=tok_ref.vocab_size, seq_len=args.seq_len, device=device)
+    tokenizer_vocab = int(getattr(tok_ref, "vocab_size", 0))
+    tokenizer_len = int(len(tok_ref))
+    teacher_vocab = int(teacher_vocab_size or tokenizer_vocab or tokenizer_len)
+    student_vocab = max(teacher_vocab, tokenizer_vocab, tokenizer_len)
+    print(
+        f"[vocab] teacher={teacher_vocab} tokenizer_vocab={tokenizer_vocab} "
+        f"tokenizer_len={tokenizer_len} student={student_vocab}"
+    )
+    student = make_student(vocab_size=student_vocab, seq_len=args.seq_len, device=device)
     optim = torch.optim.AdamW(student.parameters(), lr=args.learning_rate, weight_decay=0.01)
     scaler = torch.amp.GradScaler("cuda")
 
@@ -199,6 +215,7 @@ def main():
             with torch.no_grad():
                 logits = teacher(input_ids=input_ids, attention_mask=attn).logits
                 top_vals, top_idx = torch.topk(logits, k=args.top_k, dim=-1)
+                top_idx = top_idx.clamp(min=0, max=student_vocab - 1)
 
             # Offload to host queue
             q.put(
