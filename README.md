@@ -42,6 +42,16 @@ git clone https://github.com/your-repo/bdh-science-fest
 cd bdh-science-fest
 ```
 
+### Web Interface (BDH vs DistilGPT2)
+
+```bash
+python webapp/server.py --host 0.0.0.0 --port 8000 --checkpoint checkpoints/jarvis_l4_super/latest.pt --data data/tinystories.txt
+```
+
+Open: `http://localhost:8000`
+
+This interface provides real side-by-side generation and comparison metrics for your BDH checkpoint against DistilGPT2.
+
 ### Train Your First Model
 
 ```bash
