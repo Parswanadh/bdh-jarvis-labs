@@ -156,3 +156,8 @@ Planned searches:
 - Physical lab notebooks preferred over digital
 - Narrative approach > data dump approach
 - For distillation: Quality > Quantity, Multi-stage for extreme compression
+
+## Web Research Execution Note
+
+- In some environments, the `gemini` CLI may be unavailable as an executable tool despite instructions mentioning it.
+- Best practice in that case: explicitly state limitation, avoid pretending live web access, provide implementation-ready guidance from authoritative known sources, and mark citations for user verification/refresh.
