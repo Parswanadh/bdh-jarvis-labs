@@ -188,6 +188,68 @@ th {
   border: 1px solid var(--border);
 }
 
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.spec-card {
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #10172e;
+}
+
+.spec-card h3 {
+  margin: 0 0 6px;
+}
+
+.spec-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.kv:last-child {
+  border-bottom: 0;
+}
+
+.kv span:first-child {
+  color: var(--muted);
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pill {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(110, 168, 255, 0.15);
+  color: var(--text);
+  border: 1px solid rgba(110, 168, 255, 0.4);
+  font-size: 0.85rem;
+}
+
+.pill.muted {
+  background: rgba(159, 176, 208, 0.1);
+  border-color: rgba(159, 176, 208, 0.4);
+  color: var(--muted);
+}
+
 .error {
   color: var(--danger);
   font-weight: 600;

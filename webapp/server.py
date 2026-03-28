@@ -92,6 +92,10 @@ class ModelService:
         self._distil_model: Optional[AutoModelForCausalLM] = None
         self._distil_tokenizer: Optional[AutoTokenizer] = None
 
+    @staticmethod
+    def _param_count_millions(model: torch.nn.Module) -> float:
+        return round(sum(p.numel() for p in model.parameters()) / 1e6, 2)
+
     def status(self) -> Dict[str, Any]:
         return {
             "time_utc": utc_now(),
@@ -112,6 +116,49 @@ class ModelService:
                 self._load_bdh()
             if self._distil_model is None:
                 self._load_distil()
+
+    def model_cards(self) -> Dict[str, Any]:
+        self.ensure_models_loaded()
+
+        bdh_card = {
+            "name": "BDH (MultiScale)",
+            "n_layer": self.cfg.bdh_n_layer,
+            "n_head": self.cfg.bdh_n_head,
+            "n_embd": self.cfg.bdh_n_embd,
+            "ffn_dim": self.cfg.bdh_ffn_dim,
+            "max_seq_len": self.cfg.bdh_max_seq_len,
+            "hebbian_lr": self.cfg.bdh_hebbian_lr,
+            "logical_layers": len(getattr(self._bdh_model.config, "decay_rates", []) or []),
+            "teacher_model": self._bdh_runtime_config.get("teacher_model"),
+            "step": self._bdh_step,
+            "params_m": self._param_count_millions(self._bdh_model),
+            "features": [
+                "Multi-scale Hebbian traces",
+                "Teacher-guided distillation",
+                "Top-k constrained sampling",
+                "Short-context efficiency focus",
+            ],
+        }
+
+        distil_cfg = self._distil_model.config if self._distil_model is not None else None
+        distil_card = {
+            "name": self.cfg.distil_model_id,
+            "n_layer": int(getattr(distil_cfg, "n_layer", 0) or 0) or None,
+            "n_head": int(getattr(distil_cfg, "n_head", 0) or 0) or None,
+            "n_embd": int(getattr(distil_cfg, "n_embd", 0) or 0) or None,
+            "ffn_dim": int(getattr(distil_cfg, "n_inner", 0) or 0) or None,
+            "max_seq_len": int(getattr(distil_cfg, "n_positions", 0) or 0) or None,
+            "hebbian_lr": None,
+            "logical_layers": None,
+            "params_m": self._param_count_millions(self._distil_model) if self._distil_model else None,
+            "features": [
+                "Transformer decoder",
+                "No Hebbian adapters",
+                "Greedy positional attention",
+            ],
+        }
+
+        return {"bdh": bdh_card, "distilgpt2": distil_card}
 
     def _load_bdh(self) -> None:
         if not self.cfg.checkpoint_path.exists():
@@ -594,7 +641,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                         "max_seq_len": self.service.cfg.bdh_max_seq_len,
                         "hebbian_lr": self.service.cfg.bdh_hebbian_lr,
                     },
+                    "bdh_runtime": self.service._bdh_runtime_config,
                     "default_top_k": self.service.cfg.default_top_k,
+                    "model_cards": self.service.model_cards(),
                 }
             )
             return

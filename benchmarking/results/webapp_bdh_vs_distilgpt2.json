@@ -1,0 +1,23 @@
+{
+  "time_utc": "2026-03-27T04:18:50.252923+00:00",
+  "sample_count": 30,
+  "max_len": 192,
+  "seed": 42,
+  "bdh": {
+    "checkpoint": "D:\\Projects\\BDH\\checkpoints\\safe\\laptop_safe.pt",
+    "step": 17092,
+    "perplexity": 68.18898041389618,
+    "loss": 4.222282974285511,
+    "logic_score": 0
+  },
+  "distilgpt2": {
+    "model_id": "distilbert/distilgpt2",
+    "perplexity": 33.28283098570507,
+    "loss": 3.5050416780113625,
+    "logic_score": 0
+  },
+  "comparison": {
+    "bdh_beats_distilgpt2_on_perplexity": false,
+    "bdh_beats_distilgpt2_on_logic": true
+  }
+}

@@ -13,6 +13,7 @@ const metricsWrapEl = byId("metricsTableWrap");
 const benchmarkWrapEl = byId("benchmarkWrap");
 const artifactsWrapEl = byId("artifactsWrap");
 const vizWrapEl = byId("vizWrap");
+const modelSpecsWrapEl = byId("modelSpecsWrap");
 
 function setStatus(text, isError = false) {
   statusEl.textContent = text;
@@ -27,6 +28,11 @@ function fmtNum(v, digits = 4) {
 function fmtRate(v) {
   if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
   return `${Number(v).toFixed(2)} tok/s`;
+}
+
+function fmtMillions(v) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "N/A";
+  return `${Number(v).toFixed(2)}M`;
 }
 
 function toJsonBox(obj) {
@@ -66,11 +72,41 @@ function renderMetricsTable(data) {
   const bdhStats = bdh.stats || {};
   const distilStats = distil.stats || {};
 
+  const qualityAdjusted = (stats, ppl) => {
+    if (!stats || stats.tokens_per_sec === undefined || !ppl) return null;
+    const num = Number(stats.tokens_per_sec);
+    const denom = Number(ppl);
+    if (Number.isNaN(num) || Number.isNaN(denom) || denom === 0) return null;
+    return num / denom;
+  };
+
+  const bdhQat = qualityAdjusted(bdhStats, bdh.prompt_perplexity);
+  const distilQat = qualityAdjusted(distilStats, distil.prompt_perplexity);
+
+  const pplGapPct =
+    bdh.prompt_perplexity !== undefined && distil.prompt_perplexity !== undefined
+      ? ((Number(distil.prompt_perplexity) - Number(bdh.prompt_perplexity)) / Number(distil.prompt_perplexity)) * 100
+      : null;
+
   const rows = [
+    {
+      metric: "Input Tokens",
+      bdh: bdhStats.input_tokens,
+      distil: distilStats.input_tokens,
+      lowerIsBetter: false,
+      fmt: (x) => `${x ?? "N/A"}`,
+    },
     {
       metric: "Generated Tokens",
       bdh: bdhStats.generated_tokens,
       distil: distilStats.generated_tokens,
+      lowerIsBetter: false,
+      fmt: (x) => `${x ?? "N/A"}`,
+    },
+    {
+      metric: "Total Tokens",
+      bdh: bdhStats.total_tokens,
+      distil: distilStats.total_tokens,
       lowerIsBetter: false,
       fmt: (x) => `${x ?? "N/A"}`,
     },
@@ -94,6 +130,20 @@ function renderMetricsTable(data) {
       distil: distil.prompt_perplexity,
       lowerIsBetter: true,
       fmt: (x) => fmtNum(x, 3),
+    },
+    {
+      metric: "Quality-Adjusted Throughput (tok/s ÷ perplexity)",
+      bdh: bdhQat,
+      distil: distilQat,
+      lowerIsBetter: false,
+      fmt: (x) => fmtNum(x, 2),
+    },
+    {
+      metric: "Perplexity Advantage vs Distil (%)",
+      bdh: pplGapPct,
+      distil: pplGapPct === null ? null : 0,
+      lowerIsBetter: false,
+      fmt: (x) => (x === null ? "N/A" : `${fmtNum(x, 1)}%`),
     },
   ];
 
@@ -124,7 +174,14 @@ function renderMetricsTable(data) {
 
   const summary = document.createElement("p");
   const comp = data.comparison || {};
-  summary.textContent = `Faster model: ${comp.faster_model || "N/A"} | Lower prompt perplexity: ${comp.lower_prompt_perplexity_model || "N/A"}`;
+  const summaryBits = [];
+  if (comp.faster_model) summaryBits.push(`Faster model: ${comp.faster_model}`);
+  if (comp.lower_prompt_perplexity_model)
+    summaryBits.push(`Lower prompt perplexity: ${comp.lower_prompt_perplexity_model}`);
+  if (bdhQat !== null && distilQat !== null)
+    summaryBits.push(`Quality-adjusted throughput winner: ${bdhQat >= distilQat ? "bdh" : "distilgpt2"}`);
+  if (pplGapPct !== null) summaryBits.push(`BDH perplexity gap: ${fmtNum(pplGapPct, 1)}% better vs DistilGPT2`);
+  summary.textContent = summaryBits.join(" | ") || "No metrics yet.";
 
   metricsWrapEl.innerHTML = "";
   metricsWrapEl.appendChild(summary);
@@ -242,6 +299,13 @@ async function bootstrap() {
   }
 
   try {
+    const cfg = await getJson("/api/config");
+    renderModelCards(cfg.model_cards);
+  } catch (err) {
+    modelSpecsWrapEl.textContent = `Failed to load model specs: ${err}`;
+  }
+
+  try {
     const artifacts = await getJson("/api/artifacts");
     renderArtifacts(artifacts);
     renderVisualizations(artifacts);
@@ -263,4 +327,67 @@ generateBtn.addEventListener("click", generateCompare);
 quickBenchmarkBtn.addEventListener("click", runQuickBenchmark);
 
 bootstrap();
+
+function renderModelCards(cards) {
+  if (!cards) {
+    modelSpecsWrapEl.textContent = "Model specs unavailable.";
+    return;
+  }
+
+  const grid = document.createElement("div");
+  grid.className = "spec-grid";
+
+  const renderCard = (key, data) => {
+    if (!data) return;
+    const card = document.createElement("div");
+    card.className = "spec-card";
+    const title = data.name || key.toUpperCase();
+
+    card.innerHTML = `
+      <h3>${title}</h3>
+      <div class="spec-meta">
+        <span>${fmtMillions(data.params_m)} params</span>
+        <span>${data.max_seq_len ? `${data.max_seq_len} ctx` : "ctx n/a"}</span>
+      </div>
+    `;
+
+    const details = document.createElement("div");
+    const addKv = (label, value) => {
+      if (value === null || value === undefined) return;
+      const row = document.createElement("div");
+      row.className = "kv";
+      row.innerHTML = `<span>${label}</span><span>${value}</span>`;
+      details.appendChild(row);
+    };
+
+    addKv("Layers", data.n_layer);
+    addKv("Heads", data.n_head);
+    addKv("Hidden Size", data.n_embd);
+    addKv("FFN Dim", data.ffn_dim);
+    addKv("Logical Layers", data.logical_layers);
+    if (data.teacher_model) addKv("Teacher", data.teacher_model);
+    if (data.step !== null && data.step !== undefined) addKv("Checkpoint Step", data.step);
+    card.appendChild(details);
+
+    if (Array.isArray(data.features) && data.features.length) {
+      const pills = document.createElement("div");
+      pills.className = "pill-row";
+      data.features.forEach((f) => {
+        const span = document.createElement("span");
+        span.className = "pill";
+        span.textContent = f;
+        pills.appendChild(span);
+      });
+      card.appendChild(pills);
+    }
+
+    grid.appendChild(card);
+  };
+
+  renderCard("bdh", cards.bdh);
+  renderCard("distilgpt2", cards.distilgpt2);
+
+  modelSpecsWrapEl.innerHTML = "";
+  modelSpecsWrapEl.appendChild(grid);
+}
 
