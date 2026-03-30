@@ -18,6 +18,7 @@ import random
 import sys
 import threading
 import time
+import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from http import HTTPStatus
@@ -28,7 +29,7 @@ from urllib.parse import unquote, urlparse
 
 import torch
 import torch.nn.functional as F
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerFast
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -120,15 +121,17 @@ class ModelService:
     def model_cards(self) -> Dict[str, Any]:
         self.ensure_models_loaded()
 
+        bdh_cfg = getattr(self._bdh_model, "config", None)
+
         bdh_card = {
             "name": "BDH (MultiScale)",
-            "n_layer": self.cfg.bdh_n_layer,
-            "n_head": self.cfg.bdh_n_head,
-            "n_embd": self.cfg.bdh_n_embd,
-            "ffn_dim": self.cfg.bdh_ffn_dim,
-            "max_seq_len": self.cfg.bdh_max_seq_len,
-            "hebbian_lr": self.cfg.bdh_hebbian_lr,
-            "logical_layers": len(getattr(self._bdh_model.config, "decay_rates", []) or []),
+            "n_layer": getattr(bdh_cfg, "n_layer", self.cfg.bdh_n_layer),
+            "n_head": getattr(bdh_cfg, "n_head", self.cfg.bdh_n_head),
+            "n_embd": getattr(bdh_cfg, "n_embd", self.cfg.bdh_n_embd),
+            "ffn_dim": getattr(bdh_cfg, "ffn_dim", self.cfg.bdh_ffn_dim),
+            "max_seq_len": getattr(bdh_cfg, "max_seq_len", self.cfg.bdh_max_seq_len),
+            "hebbian_lr": getattr(bdh_cfg, "hebbian_lr", self.cfg.bdh_hebbian_lr),
+            "logical_layers": len(getattr(bdh_cfg, "decay_rates", []) or []),
             "teacher_model": self._bdh_runtime_config.get("teacher_model"),
             "step": self._bdh_step,
             "params_m": self._param_count_millions(self._bdh_model),
@@ -165,31 +168,95 @@ class ModelService:
             raise FileNotFoundError(f"BDH checkpoint not found: {self.cfg.checkpoint_path}")
 
         checkpoint = torch.load(self.cfg.checkpoint_path, map_location=self.device, weights_only=False)
-        if "model" not in checkpoint:
-            raise KeyError("BDH checkpoint does not contain key 'model'")
 
-        model_state = checkpoint["model"]
+        # Accept both new-style ("model") and training-style ("model_state_dict") checkpoints.
+        model_state = None
+        for key in ("model", "model_state_dict", "state_dict"):
+            if key in checkpoint:
+                model_state = checkpoint[key]
+                break
+
+        if model_state is None:
+            raise KeyError("BDH checkpoint missing model parameters (expected 'model' or 'model_state_dict')")
+
         if "token_embedding.weight" not in model_state:
             raise KeyError("BDH checkpoint model state is missing token_embedding.weight")
 
-        runtime_cfg = checkpoint.get("config", {})
-        seq_len = int(runtime_cfg.get("seq_len", self.cfg.bdh_max_seq_len))
-        vocab_size = int(model_state["token_embedding.weight"].shape[0])
-        teacher_model = str(runtime_cfg.get("teacher_model", self.cfg.teacher_model_id))
+        runtime_cfg = checkpoint.get("config", checkpoint.get("cfg", {})) or {}
 
-        tokenizer = AutoTokenizer.from_pretrained(teacher_model, trust_remote_code=True)
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+        def _cfg_get(name: str, default: Any) -> Any:
+            if isinstance(runtime_cfg, dict):
+                return runtime_cfg.get(name, default)
+            return getattr(runtime_cfg, name, default)
+
+        seq_len = int(_cfg_get("seq_len", _cfg_get("max_seq_len", self.cfg.bdh_max_seq_len)))
+        vocab_size = int(model_state["token_embedding.weight"].shape[0])
+        teacher_model = str(_cfg_get("teacher_model", self.cfg.teacher_model_id))
+
+        tokenizer: Optional[AutoTokenizer] = None
+        tokenizer_path = _cfg_get("tokenizer_path", None)
+        candidates = []
+        if tokenizer_path:
+            tp = Path(tokenizer_path)
+            candidates.append(tp if tp.is_absolute() else (REPO_ROOT / tp))
+        candidates.append(REPO_ROOT / "tokenizer-model")
+        candidates.append(REPO_ROOT / "tokenizers")
+        candidates.append(REPO_ROOT / "tokenizers" / "bbpe_tokenizer.json")
+
+        def _load_local_tokenizer(path: Path) -> Optional[PreTrainedTokenizerFast]:
+            if path.is_file() and path.suffix == ".json":
+                tok_file = path
+            elif path.is_dir() and (path / "tokenizer.json").exists():
+                tok_file = path / "tokenizer.json"
+            else:
+                return None
+            tok = PreTrainedTokenizerFast(tokenizer_file=str(tok_file))
+            # Set reasonable specials
+            vocab = tok.get_vocab()
+            if tok.eos_token is None:
+                if "<|endoftext|>" in vocab:
+                    tok.eos_token = "<|endoftext|>"
+                elif "[SEP]" in vocab:
+                    tok.eos_token = "[SEP]"
+            if tok.unk_token is None:
+                tok.unk_token = tok.eos_token or "[UNK]"
+            if tok.pad_token is None:
+                tok.pad_token = tok.eos_token or tok.unk_token
+            return tok
+
+        for cand in candidates:
+            tok = _load_local_tokenizer(cand)
+            if tok is None:
+                continue
+            if len(tok) != vocab_size:
+                continue
+            tokenizer = tok
+            self._bdh_runtime_config["tokenizer_path"] = str(cand)
+            break
+
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(teacher_model, trust_remote_code=True)
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+            if len(tokenizer) != vocab_size:
+                raise ValueError(
+                    f"Tokenizer vocab ({len(tokenizer)}) != checkpoint vocab ({vocab_size}). "
+                    "Please set a compatible tokenizer_path (e.g., tokenizer-model/tokenizer.json)."
+                )
 
         model_cfg = MultiScaleBDHConfig(
             vocab_size=vocab_size,
-            n_embd=self.cfg.bdh_n_embd,
-            n_layer=self.cfg.bdh_n_layer,
-            n_head=self.cfg.bdh_n_head,
-            ffn_dim=self.cfg.bdh_ffn_dim,
-            max_seq_len=seq_len,
-            decay_rates=[0.95, 0.99, 0.995],
-            hebbian_lr=self.cfg.bdh_hebbian_lr,
+            n_embd=int(_cfg_get("n_embd", self.cfg.bdh_n_embd)),
+            n_layer=int(_cfg_get("n_layer", self.cfg.bdh_n_layer)),
+            n_head=int(_cfg_get("n_head", self.cfg.bdh_n_head)),
+            ffn_dim=int(_cfg_get("ffn_dim", self.cfg.bdh_ffn_dim)),
+            dropout=float(_cfg_get("dropout", 0.1)),
+            max_seq_len=int(_cfg_get("max_seq_len", seq_len)),
+            decay_rates=list(_cfg_get("decay_rates", [0.95, 0.99, 0.995])),
+            num_scales=int(_cfg_get("num_scales", 3)),
+            scale_weights=list(_cfg_get("scale_weights", [0.2, 0.3, 0.5])),
+            hebbian_lr=float(_cfg_get("hebbian_lr", self.cfg.bdh_hebbian_lr)),
+            init_states=str(_cfg_get("init_states", "zeros")),
         )
 
         model = MultiScaleBDH(model_cfg).to(self.device)
@@ -198,13 +265,18 @@ class ModelService:
 
         self._bdh_model = model
         self._bdh_tokenizer = tokenizer
-        self._bdh_step = int(checkpoint.get("step", 0))
+        self._bdh_step = int(
+            checkpoint.get("step")
+            or checkpoint.get("global_step")
+            or checkpoint.get("batch")
+            or 0
+        )
         self._bdh_runtime_config = {
             "teacher_model": teacher_model,
             "seq_len": seq_len,
-            "top_k": int(runtime_cfg.get("top_k", self.cfg.default_top_k)),
-            "teacher_replicas": runtime_cfg.get("teacher_replicas"),
-            "batch_size": runtime_cfg.get("batch_size"),
+            "top_k": int(_cfg_get("top_k", self.cfg.default_top_k)),
+            "teacher_replicas": _cfg_get("teacher_replicas", None),
+            "batch_size": _cfg_get("batch_size", None),
         }
 
     def _load_distil(self) -> None:
@@ -627,6 +699,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._send_json(self.service.status())
             return
         if route == "/api/config":
+            self.service.ensure_models_loaded()
+            if self.service._bdh_model is None:
+                self._send_json({"error": "BDH model failed to load"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                return
+            bdh_cfg = getattr(self.service._bdh_model, "config", None)
             self._send_json(
                 {
                     "checkpoint_path": str(self.service.cfg.checkpoint_path),
@@ -634,12 +711,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                     "teacher_model_id": self.service.cfg.teacher_model_id,
                     "distil_model_id": self.service.cfg.distil_model_id,
                     "bdh_architecture": {
-                        "n_embd": self.service.cfg.bdh_n_embd,
-                        "n_layer": self.service.cfg.bdh_n_layer,
-                        "n_head": self.service.cfg.bdh_n_head,
-                        "ffn_dim": self.service.cfg.bdh_ffn_dim,
-                        "max_seq_len": self.service.cfg.bdh_max_seq_len,
-                        "hebbian_lr": self.service.cfg.bdh_hebbian_lr,
+                        "n_embd": getattr(bdh_cfg, "n_embd", self.service.cfg.bdh_n_embd),
+                        "n_layer": getattr(bdh_cfg, "n_layer", self.service.cfg.bdh_n_layer),
+                        "n_head": getattr(bdh_cfg, "n_head", self.service.cfg.bdh_n_head),
+                        "ffn_dim": getattr(bdh_cfg, "ffn_dim", self.service.cfg.bdh_ffn_dim),
+                        "max_seq_len": getattr(bdh_cfg, "max_seq_len", self.service.cfg.bdh_max_seq_len),
+                        "hebbian_lr": getattr(bdh_cfg, "hebbian_lr", self.service.cfg.bdh_hebbian_lr),
                     },
                     "bdh_runtime": self.service._bdh_runtime_config,
                     "default_top_k": self.service.cfg.default_top_k,
@@ -697,6 +774,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         except (ValueError, FileNotFoundError, RuntimeError, KeyError) as e:
             self._send_json({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
         except Exception as e:
+            traceback.print_exc()
             self._send_json(
                 {"error": f"Unhandled server error: {type(e).__name__}: {e}"},
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,

@@ -1,14 +1,14 @@
 {
-  "time_utc": "2026-03-27T04:18:50.252923+00:00",
+  "time_utc": "2026-03-30T07:10:25.087603+00:00",
   "sample_count": 30,
   "max_len": 192,
   "seed": 42,
   "bdh": {
-    "checkpoint": "D:\\Projects\\BDH\\checkpoints\\safe\\laptop_safe.pt",
-    "step": 17092,
-    "perplexity": 68.18898041389618,
-    "loss": 4.222282974285511,
-    "logic_score": 0
+    "checkpoint": "D:\\Projects\\BDH\\checkpoints\\1hour_training\\final_model.pt",
+    "step": 0,
+    "perplexity": 85.3688303532898,
+    "loss": 4.446981050018081,
+    "logic_score": 20
   },
   "distilgpt2": {
     "model_id": "distilbert/distilgpt2",
