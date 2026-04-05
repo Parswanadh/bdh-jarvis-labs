@@ -15,6 +15,7 @@ import json
 import math
 import mimetypes
 import random
+import re
 import sys
 import threading
 import time
@@ -97,6 +98,26 @@ class ModelService:
     def _param_count_millions(model: torch.nn.Module) -> float:
         return round(sum(p.numel() for p in model.parameters()) / 1e6, 2)
 
+    @staticmethod
+    def _sanitize_bpe_artifacts(text: str) -> str:
+        if not text:
+            return text
+        if "Ġ" not in text and "Ċ" not in text and "ĉ" not in text:
+            return text
+        cleaned = text.replace("Ġ", " ").replace("Ċ", "\n").replace("ĉ", "\t")
+        cleaned = re.sub(r" {2,}", " ", cleaned)
+        cleaned = re.sub(r" *\n *", "\n", cleaned)
+        return cleaned
+
+    @staticmethod
+    def _tokenizer_vs_model_vocab(tokenizer: AutoTokenizer, model_vocab_size: int) -> Dict[str, int]:
+        tok_vocab = int(len(tokenizer))
+        return {
+            "tokenizer_vocab_size": tok_vocab,
+            "model_vocab_size": int(model_vocab_size),
+            "vocab_padding_tokens": int(max(model_vocab_size - tok_vocab, 0)),
+        }
+
     def status(self) -> Dict[str, Any]:
         return {
             "time_utc": utc_now(),
@@ -132,6 +153,9 @@ class ModelService:
             "max_seq_len": getattr(bdh_cfg, "max_seq_len", self.cfg.bdh_max_seq_len),
             "hebbian_lr": getattr(bdh_cfg, "hebbian_lr", self.cfg.bdh_hebbian_lr),
             "logical_layers": len(getattr(bdh_cfg, "decay_rates", []) or []),
+            "model_vocab_size": self._bdh_runtime_config.get("model_vocab_size"),
+            "tokenizer_vocab_size": self._bdh_runtime_config.get("tokenizer_vocab_size"),
+            "vocab_padding_tokens": self._bdh_runtime_config.get("vocab_padding_tokens"),
             "teacher_model": self._bdh_runtime_config.get("teacher_model"),
             "step": self._bdh_step,
             "params_m": self._param_count_millions(self._bdh_model),
@@ -213,6 +237,17 @@ class ModelService:
             tok = PreTrainedTokenizerFast(tokenizer_file=str(tok_file))
             # Set reasonable specials
             vocab = tok.get_vocab()
+            # Some local BBPE tokenizer exports in this repo have decoder=null,
+            # which leaks raw token markers like "Ġ" in generated text.
+            try:
+                backend_decoder = getattr(tok.backend_tokenizer, "decoder", None)
+                if backend_decoder is None and "Ġ" in vocab:
+                    from tokenizers import decoders as token_decoders
+
+                    tok.backend_tokenizer.decoder = token_decoders.ByteLevel()
+            except Exception:
+                # Keep tokenizer load resilient; fallback decode still works.
+                pass
             if tok.eos_token is None:
                 if "<|endoftext|>" in vocab:
                     tok.eos_token = "<|endoftext|>"
@@ -238,10 +273,18 @@ class ModelService:
             tokenizer = AutoTokenizer.from_pretrained(teacher_model, trust_remote_code=True)
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
-            if len(tokenizer) != vocab_size:
+
+            tok_vocab = int(len(tokenizer))
+            # Allow padded model vocab (common in Qwen checkpoints) where model vocab >= tokenizer vocab.
+            if tok_vocab > vocab_size:
                 raise ValueError(
-                    f"Tokenizer vocab ({len(tokenizer)}) != checkpoint vocab ({vocab_size}). "
-                    "Please set a compatible tokenizer_path (e.g., tokenizer-model/tokenizer.json)."
+                    f"Tokenizer vocab ({tok_vocab}) is larger than checkpoint vocab ({vocab_size}). "
+                    "Please set a compatible tokenizer_path."
+                )
+            if (vocab_size - tok_vocab) > 2048:
+                raise ValueError(
+                    f"Tokenizer vocab ({tok_vocab}) too small for checkpoint vocab ({vocab_size}). "
+                    "Please provide a tokenizer_path with closer vocab size."
                 )
 
         model_cfg = MultiScaleBDHConfig(
@@ -277,6 +320,7 @@ class ModelService:
             "top_k": int(_cfg_get("top_k", self.cfg.default_top_k)),
             "teacher_replicas": _cfg_get("teacher_replicas", None),
             "batch_size": _cfg_get("batch_size", None),
+            **self._tokenizer_vs_model_vocab(tokenizer, vocab_size),
         }
 
     def _load_distil(self) -> None:
@@ -314,6 +358,12 @@ class ModelService:
                 logits, _ = model(window)
                 next_token_logits = logits[:, -1, :] / max(temperature, 1e-6)
 
+                tokenizer_vocab_size = int(self._bdh_runtime_config.get("tokenizer_vocab_size", len(tokenizer)))
+                effective_vocab = min(int(next_token_logits.shape[-1]), tokenizer_vocab_size)
+                if effective_vocab <= 0:
+                    raise RuntimeError("Invalid tokenizer vocabulary size for generation.")
+                next_token_logits = next_token_logits[:, :effective_vocab]
+
                 k = min(int(top_k), int(next_token_logits.shape[-1]))
                 if k > 0:
                     values, _ = torch.topk(next_token_logits, k=k)
@@ -333,6 +383,7 @@ class ModelService:
 
         elapsed = time.time() - start
         output_text = tokenizer.decode(generated[0], skip_special_tokens=True)
+        output_text = self._sanitize_bpe_artifacts(output_text)
         generated_tokens = int(generated.shape[1] - input_ids.shape[1])
         stats = {
             "elapsed_sec": elapsed,

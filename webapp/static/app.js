@@ -365,6 +365,9 @@ function renderModelCards(cards) {
     addKv("Hidden Size", data.n_embd);
     addKv("FFN Dim", data.ffn_dim);
     addKv("Logical Layers", data.logical_layers);
+    addKv("Model Vocab", data.model_vocab_size);
+    addKv("Tokenizer Vocab", data.tokenizer_vocab_size);
+    addKv("Vocab Padding", data.vocab_padding_tokens);
     if (data.teacher_model) addKv("Teacher", data.teacher_model);
     if (data.step !== null && data.step !== undefined) addKv("Checkpoint Step", data.step);
     card.appendChild(details);

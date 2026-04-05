@@ -20,6 +20,19 @@ Open:
 
 `http://localhost:8000`
 
+## Professor Demo Shortcut
+
+From repo root:
+
+```powershell
+pwsh -File webapp/run_professor_demo.ps1 -Profile latest -EagerLoad
+```
+
+Profiles:
+
+- `latest`: newest safe checkpoint (`checkpoints/safe/laptop_safe_11L.pt`)
+- `stable`: BBPE checkpoint with stronger quick-logic score (`checkpoints/1hour_training/final_model.pt`)
+
 ## Notes
 
 - This uses real model inference (no fake results).
