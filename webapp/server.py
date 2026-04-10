@@ -39,8 +39,12 @@ STATIC_DIR = WEBAPP_ROOT / "static"
 VISUALIZATION_DIR = REPO_ROOT / "visualization"
 BENCHMARK_RESULTS_DIR = REPO_ROOT / "benchmarking" / "results"
 
-sys.path.insert(0, str(REPO_ROOT / "implementation"))
-from multiscale_bdh import MultiScaleBDH, MultiScaleBDHConfig  # noqa: E402
+sys.path.insert(0, str(REPO_ROOT))
+from implementation.multiscale_bdh import MultiScaleBDH, MultiScaleBDHConfig  # noqa: E402
+import implementation.multiscale_bdh as _multiscale_bdh_module  # noqa: E402
+
+# Some older checkpoints reference module path "multiscale_bdh" during unpickling.
+sys.modules.setdefault("multiscale_bdh", _multiscale_bdh_module)
 
 
 def utc_now() -> str:
@@ -82,11 +86,87 @@ class AppConfig:
     eager_load: bool
 
 
+class ByteLevelTokenizer:
+    """Minimal byte tokenizer fallback for small-vocabulary checkpoints."""
+
+    def __init__(self, vocab_size: int):
+        self.vocab_size = max(1, int(vocab_size))
+        self.eos_token_id = None
+        self.pad_token_id = 0
+        self.eos_token = None
+        self.pad_token = "<|pad|>"
+        self.unk_token = "<|unk|>"
+
+    def __len__(self) -> int:
+        return self.vocab_size
+
+    def _clip(self, token_id: int) -> int:
+        if token_id < 0 or token_id >= self.vocab_size:
+            return self.pad_token_id
+        return token_id
+
+    def encode(
+        self,
+        text: str,
+        return_tensors: Optional[str] = None,
+        truncation: bool = False,
+        max_length: Optional[int] = None,
+    ):
+        ids = [self._clip(b) for b in text.encode("utf-8", errors="ignore")]
+        if truncation and max_length is not None and max_length > 0:
+            ids = ids[:max_length]
+        if not ids:
+            ids = [self.pad_token_id]
+        if return_tensors == "pt":
+            return torch.tensor([ids], dtype=torch.long)
+        return ids
+
+    def __call__(
+        self,
+        text: str,
+        return_tensors: str = "pt",
+        truncation: bool = False,
+        max_length: Optional[int] = None,
+        **_: Any,
+    ) -> Dict[str, Any]:
+        input_ids = self.encode(
+            text,
+            return_tensors="pt",
+            truncation=truncation,
+            max_length=max_length,
+        )
+        attention_mask = torch.ones_like(input_ids)
+        if return_tensors == "pt":
+            return {"input_ids": input_ids, "attention_mask": attention_mask}
+        return {
+            "input_ids": input_ids.tolist(),
+            "attention_mask": attention_mask.tolist(),
+        }
+
+    def decode(self, token_ids: Any, skip_special_tokens: bool = True) -> str:
+        del skip_special_tokens
+        if hasattr(token_ids, "tolist"):
+            token_ids = token_ids.tolist()
+        if token_ids and isinstance(token_ids[0], list):
+            token_ids = token_ids[0]
+
+        byte_vals = []
+        for token_id in token_ids:
+            tid = int(token_id)
+            if 0 <= tid < 256:
+                byte_vals.append(tid)
+
+        if not byte_vals:
+            return ""
+        return bytes(byte_vals).decode("utf-8", errors="ignore")
+
+
 class ModelService:
     def __init__(self, cfg: AppConfig):
         self.cfg = cfg
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._lock = threading.Lock()
+        self._runtime_warnings: List[str] = []
         self._bdh_model: Optional[MultiScaleBDH] = None
         self._bdh_tokenizer: Optional[AutoTokenizer] = None
         self._bdh_step: int = 0
@@ -110,7 +190,7 @@ class ModelService:
         return cleaned
 
     @staticmethod
-    def _tokenizer_vs_model_vocab(tokenizer: AutoTokenizer, model_vocab_size: int) -> Dict[str, int]:
+    def _tokenizer_vs_model_vocab(tokenizer: Any, model_vocab_size: int) -> Dict[str, int]:
         tok_vocab = int(len(tokenizer))
         return {
             "tokenizer_vocab_size": tok_vocab,
@@ -118,12 +198,51 @@ class ModelService:
             "vocab_padding_tokens": int(max(model_vocab_size - tok_vocab, 0)),
         }
 
+    @staticmethod
+    def _is_cuda_runtime_error(exc: Exception) -> bool:
+        if not isinstance(exc, RuntimeError):
+            return False
+        msg = str(exc).lower()
+        return (
+            "cuda error" in msg
+            or "cudnn" in msg
+            or "cublas" in msg
+            or "device-side assert" in msg
+        )
+
+    def _switch_to_cpu_and_reload(self, exc: Exception) -> bool:
+        if self.device.type != "cuda":
+            return False
+
+        summary = str(exc).strip().splitlines()[0] if str(exc).strip() else type(exc).__name__
+        note = f"CUDA failure detected; switching inference to CPU ({summary})."
+        self._runtime_warnings.append(note)
+        print(f"[webapp] {note}")
+
+        try:
+            torch.cuda.synchronize()
+        except Exception:
+            pass
+        try:
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+        with self._lock:
+            self.device = torch.device("cpu")
+            self._bdh_model = None
+            self._distil_model = None
+
+        self.ensure_models_loaded()
+        return True
+
     def status(self) -> Dict[str, Any]:
         return {
             "time_utc": utc_now(),
             "device": str(self.device),
             "cuda_available": bool(torch.cuda.is_available()),
             "cuda_device_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+            "runtime_warnings": self._runtime_warnings[-5:],
             "models_loaded": {
                 "bdh": self._bdh_model is not None,
                 "distilgpt2": self._distil_model is not None,
@@ -270,22 +389,28 @@ class ModelService:
             break
 
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(teacher_model, trust_remote_code=True)
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
+            # Small-vocab checkpoints (e.g., byte-level 256) can run without
+            # external tokenizer artifacts using a simple byte fallback.
+            if vocab_size <= 256:
+                tokenizer = ByteLevelTokenizer(vocab_size)
+                self._bdh_runtime_config["tokenizer_path"] = "byte-level-fallback"
+            else:
+                tokenizer = AutoTokenizer.from_pretrained(teacher_model, trust_remote_code=True)
+                if tokenizer.pad_token is None:
+                    tokenizer.pad_token = tokenizer.eos_token
 
-            tok_vocab = int(len(tokenizer))
-            # Allow padded model vocab (common in Qwen checkpoints) where model vocab >= tokenizer vocab.
-            if tok_vocab > vocab_size:
-                raise ValueError(
-                    f"Tokenizer vocab ({tok_vocab}) is larger than checkpoint vocab ({vocab_size}). "
-                    "Please set a compatible tokenizer_path."
-                )
-            if (vocab_size - tok_vocab) > 2048:
-                raise ValueError(
-                    f"Tokenizer vocab ({tok_vocab}) too small for checkpoint vocab ({vocab_size}). "
-                    "Please provide a tokenizer_path with closer vocab size."
-                )
+                tok_vocab = int(len(tokenizer))
+                # Allow padded model vocab (common in Qwen checkpoints) where model vocab >= tokenizer vocab.
+                if tok_vocab > vocab_size:
+                    raise ValueError(
+                        f"Tokenizer vocab ({tok_vocab}) is larger than checkpoint vocab ({vocab_size}). "
+                        "Please set a compatible tokenizer_path."
+                    )
+                if (vocab_size - tok_vocab) > 2048:
+                    raise ValueError(
+                        f"Tokenizer vocab ({tok_vocab}) too small for checkpoint vocab ({vocab_size}). "
+                        "Please provide a tokenizer_path with closer vocab size."
+                    )
 
         model_cfg = MultiScaleBDHConfig(
             vocab_size=vocab_size,
@@ -475,11 +600,25 @@ class ModelService:
             raise ValueError("Prompt cannot be empty.")
 
         self.ensure_models_loaded()
-        with self._lock:
-            bdh_text, bdh_stats = self._generate_bdh(prompt, max_new_tokens, temperature, top_k)
-            distil_text, distil_stats = self._generate_distil(prompt, max_new_tokens, temperature, top_k)
-            bdh_ppl = self._prompt_perplexity_bdh(prompt)
-            distil_ppl = self._prompt_perplexity_distil(prompt)
+        fallback_used = False
+        try:
+            with self._lock:
+                bdh_text, bdh_stats = self._generate_bdh(prompt, max_new_tokens, temperature, top_k)
+                distil_text, distil_stats = self._generate_distil(prompt, max_new_tokens, temperature, top_k)
+                bdh_ppl = self._prompt_perplexity_bdh(prompt)
+                distil_ppl = self._prompt_perplexity_distil(prompt)
+        except RuntimeError as e:
+            if not self._is_cuda_runtime_error(e):
+                raise
+            if not self._switch_to_cpu_and_reload(e):
+                raise
+
+            fallback_used = True
+            with self._lock:
+                bdh_text, bdh_stats = self._generate_bdh(prompt, max_new_tokens, temperature, top_k)
+                distil_text, distil_stats = self._generate_distil(prompt, max_new_tokens, temperature, top_k)
+                bdh_ppl = self._prompt_perplexity_bdh(prompt)
+                distil_ppl = self._prompt_perplexity_distil(prompt)
 
         return {
             "prompt": prompt,
@@ -487,6 +626,11 @@ class ModelService:
                 "max_new_tokens": int(max_new_tokens),
                 "temperature": float(temperature),
                 "top_k": int(top_k),
+            },
+            "runtime": {
+                "device": str(self.device),
+                "cuda_fallback_used": fallback_used,
+                "warnings": self._runtime_warnings[-5:],
             },
             "bdh": {
                 "model": "BDH (MultiScale)",
