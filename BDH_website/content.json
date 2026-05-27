@@ -1,0 +1,185 @@
+{
+  "site": {
+    "name": "BDH Research",
+    "tagline": "Architecting Intelligence — From First Principles",
+    "description": "BDH (Baby Dragon Hatchling) is a research project exploring brain-inspired neural architectures: linear attention, Hebbian learning, and multi-scale memory for efficient, interpretable AGI.",
+    "url": "https://bdh-research.ai"
+  },
+  "nav": [
+    {"label": "Architecture", "href": "#architecture"},
+    {"label": "Research", "href": "#research"},
+    {"label": "AGI Pathway", "href": "#agi-pathway"},
+    {"label": "Status", "href": "#status"},
+    {"label": "GitHub", "href": "https://github.com/your-org/BDH"}
+  ],
+  "hero": {
+    "headline": "Architecting the Singularity",
+    "subheadline": "BDH replaces quadratic attention with O(N) linear attention, Hebbian state matrices, and multi-scale memory — a fundamentally different approach to sequence modeling inspired by biological neural circuits.",
+    "cta_primary": {"text": "Read the Paper", "href": "https://arxiv.org/abs/2509.26507"},
+    "cta_secondary": {"text": "Explore the Code", "href": "https://github.com/your-org/BDH"}
+  },
+  "architecture": {
+    "title": "Architecture",
+    "description": "BDH rethinks the transformer from first principles. Instead of comparing every token to every other token, it accumulates knowledge in a Hebbian state matrix that grows linearly with sequence length.",
+    "components": [
+      {
+        "name": "Linear Attention",
+        "icon": "⚡",
+        "description": "O(N) complexity via matrix associativity: Q(KᵀV) instead of (QKᵀ)V",
+        "technical_detail": "Eliminates the O(N²) softmax bottleneck. Trades competitive selection for efficient accumulation."
+      },
+      {
+        "name": "Hebbian State Matrix",
+        "icon": "🧠",
+        "description": "Working memory via local learning rule: E(t+1) = γ·E(t) + η·(Q⊗V)",
+        "technical_detail": "Neurons that fire together wire together. The state matrix accumulates query-value associations over time with exponential decay."
+      },
+      {
+        "name": "Multi-Scale Memory",
+        "icon": "⏱",
+        "description": "Three timescales: fast (γ=0.95), medium (γ=0.99), slow (γ=0.995)",
+        "technical_detail": "Maps to biological memory systems: short-term plasticity, early LTP, late LTP. Weighted combination extends effective context ~4× over single-scale."
+      },
+      {
+        "name": "Multiplicative Gating",
+        "icon": "🔀",
+        "description": "Residual modulation: output = x × sigmoid(attn + ffn)",
+        "technical_detail": "Unlike additive residuals in all other architectures, multiplicative gating implements neuromodulation — the model controls its own information flow."
+      },
+      {
+        "name": "ReLU Sparsity",
+        "icon": "🎯",
+        "description": "~5% active neurons via ReLU in FFN layers",
+        "technical_detail": "Biologically inspired sparse activations. Creates emergent modularity and energy efficiency. Enables future sparse GPU kernel optimization."
+      },
+      {
+        "name": "RYS Surgery",
+        "icon": "✂️",
+        "description": "Progressive scaling via layer duplication",
+        "technical_detail": "Enables stable warm-starts for deeper models by duplicating layers and adding infinitesimal noise, preserving learned distributions while increasing capacity."
+      },
+      {
+        "name": "Mimetic Initialization",
+        "icon": "🎭",
+        "description": "Teacher-mimicking weight initialization",
+        "technical_detail": "Weights are initialized to mimic the gradient flow and activation statistics of a larger teacher model, significantly reducing early training instability in distilled models."
+      },
+      {
+        "name": "Byte-Level Processing",
+        "icon": "🔤",
+        "description": "No tokenizer required — processes raw bytes (vocab=256)",
+        "technical_detail": "Universal, language-agnostic input. No OOV tokens. BBPE tokenizer (vocab=8192) available as optional optimization for 2.75× speedup."
+      }
+    ],
+    "diagram_description": "Input tokens flow through embedding → LayerNorm → MultiScaleLinearAttention (computes Q(KᵀV), updates Hebbian state) → LayerNorm → ReLULowRankFFN → Multiplicative Gating combines attention and FFN outputs → Output. Three parallel Hebbian states (fast/medium/slow) are combined with weights 0.2/0.3/0.5."
+  },
+  "agi_pathway": {
+    "title": "AGI Pathway",
+    "description": "BDH is designed as the foundation for recursive, self-improving intelligence.",
+    "milestones": [
+      {
+        "name": "Meta-Cognition",
+        "status": "Research",
+        "description": "Recursive monitoring of internal states to identify and correct reasoning errors in real-time."
+      },
+      {
+        "name": "Self-Play Distillation",
+        "status": "Experimental",
+        "description": "A feedback loop where the model generates training data for itself, driving recursive intelligence gains."
+      },
+      {
+        "name": "Goal-Directed Exploration",
+        "status": "Planned",
+        "description": "Active hypothesis testing within the latent space to navigate towards user-defined goals."
+      },
+      {
+        "name": "Architectural Singularity",
+        "status": "Theoretical",
+        "description": "The point where the model optimizes its own architectural parameters to exceed human design capabilities."
+      }
+    ]
+  },
+  "features": [
+    {
+      "title": "Linear Scaling",
+      "description": "Attention cost grows linearly with sequence length, not quadratically. Enables processing of much longer sequences than standard transformers.",
+      "metric": "O(N) vs O(N²)"
+    },
+    {
+      "title": "Fixed Memory",
+      "description": "Constant O(d²) working memory regardless of sequence length. No growing KV cache.",
+      "metric": "O(1) per token"
+    },
+    {
+      "title": "Interpretable States",
+      "description": "The Hebbian state matrix is directly readable — each entry encodes an association between dimensions. No post-hoc analysis needed.",
+      "metric": "Native interpretability"
+    },
+    {
+      "title": "Biologically Grounded",
+      "description": "Hebbian learning, multi-scale memory, sparse activations, and neuromodulatory gating — all inspired by known brain mechanisms.",
+      "metric": "5 biological principles"
+    },
+    {
+      "title": "Knowledge Distillation",
+      "description": "Training pipeline supports distillation from larger models (TinyLlama, Qwen, Gemma) for accelerated learning.",
+      "metric": "Multiple teacher support"
+    },
+    {
+      "title": "Open Research",
+      "description": "Fully open-source implementation. All code, configs, and research documentation publicly available.",
+      "metric": "100% open source"
+    }
+  ],
+  "research": {
+    "title": "Research",
+    "papers": [
+      {
+        "title": "The Dragon Hatchling: The Missing Link Between the Transformer and Models of the Brain",
+        "link": "https://arxiv.org/abs/2509.26507",
+        "summary": "Original BDH paper. Introduces the architecture, biological motivation, and initial results. Claims Transformer-like performance at 10M-1B parameter range with O(N) complexity."
+      }
+    ]
+  },
+  "status": {
+    "current_state": "Research prototype — core architecture implemented, training pipeline functional, scaling and benchmarking in progress.",
+    "what_works": [
+      "Linear attention via Q(KᵀV) associativity",
+      "Multi-scale Hebbian state matrices (fast/medium/slow)",
+      "Multiplicative gating mechanism",
+      "ReLU-induced sparse activations",
+      "Knowledge distillation pipeline (multiple variants)",
+      "Byte-level and BBPE tokenization",
+      "RoPE positional encoding (base model)",
+      "RYS surgery (layer duplication warm-start)",
+      "Training stabilization (mimetic init, extended warmup)"
+    ],
+    "what_in_progress": [
+      "Data-dependent gating (input-controlled decay rates)",
+      "Hybrid attention (BDH + full attention layers)",
+      "Local convolution (causal Conv1d before linear attention)",
+      "Multi-token prediction (t+1, t+2 auxiliary heads)",
+      "Comprehensive benchmarking (perplexity, MMLU, long-context)",
+      "Distributed training support (FSDP/DeepSpeed)",
+      "BF16 mixed precision training"
+    ],
+    "what_planned": [
+      "Scale to 500M-1B parameters",
+      "Continual learning experiments (no catastrophic forgetting)",
+      "Synapse-level mechanistic interpretability analysis",
+      "Hebbian state as content-dependent selection index",
+      "Complex-valued Hebbian state (inspired by Mamba-3)",
+      "Chunkwise parallel training kernel",
+      "NeurIPS 2027 paper submission"
+    ]
+  },
+  "footer": {
+    "links": [
+      {"label": "Paper (arXiv)", "href": "https://arxiv.org/abs/2509.26507"},
+      {"label": "GitHub", "href": "https://github.com/your-org/BDH"},
+      {"label": "Research Docs", "href": "https://github.com/your-org/BDH/tree/main/research_for_gemini"}
+    ],
+    "copyright": "BDH Research — Open Source"
+  }
+}
+

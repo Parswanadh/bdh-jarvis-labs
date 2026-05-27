@@ -1,0 +1,41 @@
+{
+  "benchmark": "needle_in_haystack",
+  "seeds": [
+    42
+  ],
+  "device": "cpu",
+  "timestamp": "2026-05-17T11:45:19.024021",
+  "config": {
+    "vocab_size": 256,
+    "n_embd": 64,
+    "n_layer": 2,
+    "n_head": 4,
+    "ffn_dim": 128,
+    "max_seq_len": 512
+  },
+  "results": [
+    {
+      "32": {
+        "accuracy": 0.07,
+        "correct": 7,
+        "num_samples": 100
+      },
+      "64": {
+        "accuracy": 0.18,
+        "correct": 18,
+        "num_samples": 100
+      },
+      "128": {
+        "accuracy": 0.32,
+        "correct": 32,
+        "num_samples": 100
+      },
+      "256": {
+        "accuracy": 0.34,
+        "correct": 34,
+        "num_samples": 100
+      },
+      "seed": 42
+    }
+  ]
+}

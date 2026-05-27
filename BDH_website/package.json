@@ -1,0 +1,16 @@
+{
+  "name": "bdh_website",
+  "version": "1.0.0",
+  "description": "BDH Research — Brain-Inspired AI Architecture",
+  "scripts": {
+    "serve": "npx http-server . -p 8080 -s",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "playwright": "^1.60.0",
+    "http-server": "^14.1.1"
+  }
+}

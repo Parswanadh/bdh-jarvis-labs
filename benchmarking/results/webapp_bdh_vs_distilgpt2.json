@@ -1,0 +1,23 @@
+{
+  "time_utc": "2026-04-02T10:37:51.687217+00:00",
+  "sample_count": 30,
+  "max_len": 192,
+  "seed": 42,
+  "bdh": {
+    "checkpoint": "D:\\Projects\\BDH\\checkpoints\\1hour_training\\final_model.pt",
+    "step": 0,
+    "perplexity": 85.3688303532898,
+    "loss": 4.446981050018081,
+    "logic_score": 20
+  },
+  "distilgpt2": {
+    "model_id": "distilbert/distilgpt2",
+    "perplexity": 33.28283098570507,
+    "loss": 3.5050416780113625,
+    "logic_score": 0
+  },
+  "comparison": {
+    "bdh_beats_distilgpt2_on_perplexity": false,
+    "bdh_beats_distilgpt2_on_logic": true
+  }
+}

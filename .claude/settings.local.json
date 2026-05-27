@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(where python:*)",
+      "Bash(pip list:*)",
+      "Bash(dir:*)",
+      "Bash(pip install:*)",
+      "Bash(nvidia-smi:*)",
+      "Bash(tasklist:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
+    ]
+  },
+  "enabledPlugins": {
+    "ai-ml-toolkit@claude-code-templates": true,
+    "code-review-ai@claude-code-workflows": true,
+    "data-engineering@claude-code-workflows": true,
+    "machine-learning-ops@claude-code-workflows": true,
+    "llm-application-dev@claude-code-workflows": true,
+    "python-development@claude-code-workflows": true,
+    "web-scripting@claude-code-workflows": true
+  }
+}

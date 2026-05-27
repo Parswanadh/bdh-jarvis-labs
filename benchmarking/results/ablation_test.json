@@ -1,0 +1,736 @@
+{
+  "type": "ablation",
+  "timestamp": "2026-05-17T11:41:32.609721",
+  "config": {
+    "seeds": [
+      42,
+      123
+    ],
+    "benchmarks": [
+      "perplexity",
+      "needle_in_haystack",
+      "sequence_reversal",
+      "copy_task",
+      "associative_recall"
+    ],
+    "vocab_size": 256,
+    "n_embd": 64,
+    "n_layer": 2,
+    "n_head": 4,
+    "ffn_dim": 128,
+    "max_seq_len": 512,
+    "dropout": 0.0,
+    "lr": 0.001,
+    "device": "auto"
+  },
+  "raw_results": {
+    "baseline": {
+      "perplexity": {
+        "seeds": [
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 42
+          },
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 123
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 42
+          },
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 123
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 0.0056,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      }
+    },
+    "+outer_product": {
+      "perplexity": {
+        "seeds": [
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 42
+          },
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 123
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 42
+          },
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 123
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 0.0056,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      }
+    },
+    "+rope": {
+      "perplexity": {
+        "seeds": [
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 42
+          },
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 123
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 42
+          },
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 123
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 0.0056,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "accuracy": 0.01,
+            "correct": 1,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      }
+    },
+    "+hybrid_gating": {
+      "perplexity": {
+        "seeds": [
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 42
+          },
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 123
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 42
+          },
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 123
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0012,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      }
+    },
+    "+all_fixes": {
+      "perplexity": {
+        "seeds": [
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 42
+          },
+          {
+            "error": "view size is not compatible with input tensor's size and stride (at least one dimension spans across two contiguous subspaces). Use .reshape(...) instead.",
+            "seed": 123
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 42
+          },
+          {
+            "error": "Sequence length 513 exceeds max 512",
+            "seed": 123
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0012,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          },
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 123
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "configs": {
+      "baseline": {
+        "perplexity": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "needle_in_haystack": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 2,
+          "values": [
+            1.0,
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "+outer_product": {
+        "perplexity": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "needle_in_haystack": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 2,
+          "values": [
+            1.0,
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "+rope": {
+        "perplexity": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "needle_in_haystack": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 2,
+          "values": [
+            1.0,
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.005,
+          "std": 0.005,
+          "min": 0.0,
+          "max": 0.01,
+          "n": 2,
+          "values": [
+            0.0,
+            0.01
+          ]
+        }
+      },
+      "+hybrid_gating": {
+        "perplexity": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "needle_in_haystack": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 2,
+          "values": [
+            1.0,
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "+all_fixes": {
+        "perplexity": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "needle_in_haystack": {
+          "mean": null,
+          "std": null,
+          "n": 0
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 2,
+          "values": [
+            1.0,
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 2,
+          "values": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "comparison_table": [],
+    "significance_tests": [
+      {
+        "config": "+outer_product",
+        "baseline": "baseline",
+        "benchmark": "sequence_reversal",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+outer_product",
+        "baseline": "baseline",
+        "benchmark": "copy_task",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+outer_product",
+        "baseline": "baseline",
+        "benchmark": "associative_recall",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+rope",
+        "baseline": "baseline",
+        "benchmark": "sequence_reversal",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+rope",
+        "baseline": "baseline",
+        "benchmark": "copy_task",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+rope",
+        "baseline": "baseline",
+        "benchmark": "associative_recall",
+        "t_statistic": 1.0,
+        "p_value": 0.5,
+        "significant": false
+      },
+      {
+        "config": "+hybrid_gating",
+        "baseline": "baseline",
+        "benchmark": "sequence_reversal",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+hybrid_gating",
+        "baseline": "baseline",
+        "benchmark": "copy_task",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+hybrid_gating",
+        "baseline": "baseline",
+        "benchmark": "associative_recall",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+all_fixes",
+        "baseline": "baseline",
+        "benchmark": "sequence_reversal",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+all_fixes",
+        "baseline": "baseline",
+        "benchmark": "copy_task",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      },
+      {
+        "config": "+all_fixes",
+        "baseline": "baseline",
+        "benchmark": "associative_recall",
+        "t_statistic": NaN,
+        "p_value": NaN,
+        "significant": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,653 @@
+{
+  "type": "ablation",
+  "timestamp": "2026-05-17T11:47:17.871847",
+  "config": {
+    "seeds": [
+      42
+    ],
+    "benchmarks": [
+      "perplexity",
+      "needle_in_haystack",
+      "sequence_reversal",
+      "copy_task",
+      "associative_recall"
+    ],
+    "vocab_size": 256,
+    "n_embd": 64,
+    "n_layer": 2,
+    "n_head": 4,
+    "ffn_dim": 128,
+    "max_seq_len": 512,
+    "dropout": 0.0,
+    "lr": 0.001,
+    "device": "auto"
+  },
+  "raw_results": {
+    "baseline": {
+      "perplexity": {
+        "seeds": [
+          {
+            "test_loss": 5.104113,
+            "perplexity": 164.6979,
+            "bits_per_token": 7.3637,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "32": {
+              "accuracy": 0.07,
+              "correct": 7,
+              "num_samples": 100
+            },
+            "64": {
+              "accuracy": 0.18,
+              "correct": 18,
+              "num_samples": 100
+            },
+            "128": {
+              "accuracy": 0.32,
+              "correct": 32,
+              "num_samples": 100
+            },
+            "256": {
+              "accuracy": 0.34,
+              "correct": 34,
+              "num_samples": 100
+            },
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      }
+    },
+    "+outer_product": {
+      "perplexity": {
+        "seeds": [
+          {
+            "test_loss": 5.104113,
+            "perplexity": 164.6979,
+            "bits_per_token": 7.3637,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "32": {
+              "accuracy": 0.07,
+              "correct": 7,
+              "num_samples": 100
+            },
+            "64": {
+              "accuracy": 0.18,
+              "correct": 18,
+              "num_samples": 100
+            },
+            "128": {
+              "accuracy": 0.32,
+              "correct": 32,
+              "num_samples": 100
+            },
+            "256": {
+              "accuracy": 0.34,
+              "correct": 34,
+              "num_samples": 100
+            },
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      }
+    },
+    "+rope": {
+      "perplexity": {
+        "seeds": [
+          {
+            "test_loss": 5.104306,
+            "perplexity": 164.7297,
+            "bits_per_token": 7.364,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "32": {
+              "accuracy": 0.07,
+              "correct": 7,
+              "num_samples": 100
+            },
+            "64": {
+              "accuracy": 0.17,
+              "correct": 17,
+              "num_samples": 100
+            },
+            "128": {
+              "accuracy": 0.31,
+              "correct": 31,
+              "num_samples": 100
+            },
+            "256": {
+              "accuracy": 0.36,
+              "correct": 36,
+              "num_samples": 100
+            },
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0019,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      }
+    },
+    "+hybrid_gating": {
+      "perplexity": {
+        "seeds": [
+          {
+            "test_loss": 5.008918,
+            "perplexity": 149.7426,
+            "bits_per_token": 7.2263,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "32": {
+              "accuracy": 0.28,
+              "correct": 28,
+              "num_samples": 100
+            },
+            "64": {
+              "accuracy": 0.48,
+              "correct": 48,
+              "num_samples": 100
+            },
+            "128": {
+              "accuracy": 0.72,
+              "correct": 72,
+              "num_samples": 100
+            },
+            "256": {
+              "accuracy": 0.74,
+              "correct": 74,
+              "num_samples": 100
+            },
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0012,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      }
+    },
+    "+all_fixes": {
+      "perplexity": {
+        "seeds": [
+          {
+            "test_loss": 5.008928,
+            "perplexity": 149.7442,
+            "bits_per_token": 7.2264,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "needle_in_haystack": {
+        "seeds": [
+          {
+            "32": {
+              "accuracy": 0.28,
+              "correct": 28,
+              "num_samples": 100
+            },
+            "64": {
+              "accuracy": 0.48,
+              "correct": 48,
+              "num_samples": 100
+            },
+            "128": {
+              "accuracy": 0.72,
+              "correct": 72,
+              "num_samples": 100
+            },
+            "256": {
+              "accuracy": 0.74,
+              "correct": 74,
+              "num_samples": 100
+            },
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "sequence_reversal": {
+        "seeds": [
+          {
+            "token_accuracy": 0.0012,
+            "exact_match_rate": 0.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "copy_task": {
+        "seeds": [
+          {
+            "token_accuracy": 1.0,
+            "exact_match_rate": 1.0,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      },
+      "associative_recall": {
+        "seeds": [
+          {
+            "accuracy": 0.0,
+            "correct": 0,
+            "num_samples": 100,
+            "peak_gpu_mb": 0.0,
+            "seed": 42
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "configs": {
+      "baseline": {
+        "perplexity": {
+          "mean": 164.6979,
+          "std": 0.0,
+          "min": 164.6979,
+          "max": 164.6979,
+          "n": 1,
+          "values": [
+            164.6979
+          ]
+        },
+        "needle_in_haystack": {
+          "mean": 0.2275,
+          "std": 0.0,
+          "min": 0.2275,
+          "max": 0.2275,
+          "n": 1,
+          "values": [
+            0.2275
+          ]
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 1,
+          "values": [
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        }
+      },
+      "+outer_product": {
+        "perplexity": {
+          "mean": 164.6979,
+          "std": 0.0,
+          "min": 164.6979,
+          "max": 164.6979,
+          "n": 1,
+          "values": [
+            164.6979
+          ]
+        },
+        "needle_in_haystack": {
+          "mean": 0.2275,
+          "std": 0.0,
+          "min": 0.2275,
+          "max": 0.2275,
+          "n": 1,
+          "values": [
+            0.2275
+          ]
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 1,
+          "values": [
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        }
+      },
+      "+rope": {
+        "perplexity": {
+          "mean": 164.7297,
+          "std": 0.0,
+          "min": 164.7297,
+          "max": 164.7297,
+          "n": 1,
+          "values": [
+            164.7297
+          ]
+        },
+        "needle_in_haystack": {
+          "mean": 0.2275,
+          "std": 0.0,
+          "min": 0.2275,
+          "max": 0.2275,
+          "n": 1,
+          "values": [
+            0.2275
+          ]
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 1,
+          "values": [
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        }
+      },
+      "+hybrid_gating": {
+        "perplexity": {
+          "mean": 149.7426,
+          "std": 0.0,
+          "min": 149.7426,
+          "max": 149.7426,
+          "n": 1,
+          "values": [
+            149.7426
+          ]
+        },
+        "needle_in_haystack": {
+          "mean": 0.555,
+          "std": 0.0,
+          "min": 0.555,
+          "max": 0.555,
+          "n": 1,
+          "values": [
+            0.555
+          ]
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 1,
+          "values": [
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        }
+      },
+      "+all_fixes": {
+        "perplexity": {
+          "mean": 149.7442,
+          "std": 0.0,
+          "min": 149.7442,
+          "max": 149.7442,
+          "n": 1,
+          "values": [
+            149.7442
+          ]
+        },
+        "needle_in_haystack": {
+          "mean": 0.555,
+          "std": 0.0,
+          "min": 0.555,
+          "max": 0.555,
+          "n": 1,
+          "values": [
+            0.555
+          ]
+        },
+        "sequence_reversal": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        },
+        "copy_task": {
+          "mean": 1.0,
+          "std": 0.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 1,
+          "values": [
+            1.0
+          ]
+        },
+        "associative_recall": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 1,
+          "values": [
+            0.0
+          ]
+        }
+      }
+    },
+    "comparison_table": [],
+    "significance_tests": []
+  }
+}

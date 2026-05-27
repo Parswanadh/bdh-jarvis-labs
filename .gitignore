@@ -1,0 +1,13 @@
+﻿node_modules/
+**/node_modules/
+.agents/
+outputs/
+*.pt
+*.gguf
+*.safetensors
+**/nul
+data/
+Qwen3.5-4B/
+checkpoints/
+*.txt
+*.log

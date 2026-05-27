@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BDH vs DistilGPT2 Interface</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>BDH vs DistilGPT2</h1>
+      <p>Real prompt comparison, generation latency, and benchmark metrics.</p>
+    </header>
+
+    <main class="layout">
+      <section class="card controls">
+        <h2>Prompt Input</h2>
+        <label for="prompt">Prompt</label>
+        <textarea
+          id="prompt"
+          rows="5"
+          placeholder="Enter a prompt, for example: Once upon a time there was a curious little robot..."
+        ></textarea>
+
+        <div class="row">
+          <div>
+            <label for="maxNewTokens">Max New Tokens</label>
+            <input id="maxNewTokens" type="number" min="8" max="256" step="1" value="80" />
+          </div>
+          <div>
+            <label for="temperature">Temperature</label>
+            <input id="temperature" type="number" min="0.1" max="2.0" step="0.1" value="0.8" />
+          </div>
+          <div>
+            <label for="topK">Top-K</label>
+            <input id="topK" type="number" min="1" max="200" step="1" value="40" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="generateBtn">Generate & Compare</button>
+          <button id="quickBenchmarkBtn" class="secondary">Run Quick Benchmark</button>
+        </div>
+        <p id="status" class="status">Ready.</p>
+      </section>
+
+      <section class="card">
+        <h2>Model Specs</h2>
+        <div id="modelSpecsWrap">Loading model specs...</div>
+      </section>
+
+      <section class="card">
+        <h2>Model Outputs</h2>
+        <div class="output-grid">
+          <article>
+            <h3>BDH</h3>
+            <pre id="bdhOutput" class="output">No output yet.</pre>
+          </article>
+          <article>
+            <h3>DistilGPT2</h3>
+            <pre id="distilOutput" class="output">No output yet.</pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Live Comparison</h2>
+        <div id="metricsTableWrap"></div>
+      </section>
+
+      <section class="card">
+        <h2>Quick Benchmark Result</h2>
+        <div id="benchmarkWrap">No benchmark run yet.</div>
+      </section>
+
+      <section class="card">
+        <h2>Existing Artifacts</h2>
+        <div id="artifactsWrap">Loading artifacts...</div>
+      </section>
+
+      <section class="card">
+        <h2>Visualization Gallery</h2>
+        <div id="vizWrap" class="viz-grid">Loading visualizations...</div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
+

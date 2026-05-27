@@ -1,0 +1,23 @@
+{
+  "benchmark": "copy_task",
+  "seeds": [
+    42
+  ],
+  "device": "cpu",
+  "timestamp": "2026-05-17T11:38:01.922931",
+  "config": {
+    "vocab_size": 256,
+    "n_embd": 64,
+    "n_layer": 2,
+    "n_head": 4,
+    "ffn_dim": 128,
+    "max_seq_len": 512
+  },
+  "results": [
+    {
+      "token_accuracy": 1.0,
+      "exact_match_rate": 1.0,
+      "seed": 42
+    }
+  ]
+}

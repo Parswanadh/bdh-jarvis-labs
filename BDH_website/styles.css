@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:#020202}
+body{font-family:'Inter',system-ui,sans-serif;background:#020202;color:#F8FAFC;overflow-x:hidden;line-height:1.2;antialiased:true}
+
+/* === SOTA PRESTIGE LOADER === */
+#loader{position:fixed;inset:0;z-index:10000;background:#020202;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s cubic-bezier(0.16, 1, 0.3, 1)}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-text{font-size:4rem;font-weight:950;letter-spacing:-0.15em;background:linear-gradient(135deg,#D4AF37,#E5E4E2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:pulse 2s infinite}
+
+/* === CINEMATIC BACKGROUNDS === */
+.fixed-bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+.spotlight-hero{position:absolute;top:-50%;left:50%;transform:translateX(-50%);width:200%;height:200%;background:radial-gradient(circle at 50% 50%, rgba(212,175,55,0.08), transparent 50%);filter:blur(120px);z-index:1}
+#neural-cloud-container{position:absolute;inset:0;z-index:0;filter:contrast(1.1) brightness(1.2)}
+
+/* === TYPOGRAPHY: THE REVEAL LOOK === */
+.headline-huge{font-size:clamp(6rem, 25vw, 16rem);font-weight:950;letter-spacing:-0.1em;line-height:0.7;perspective:1000px;text-transform:uppercase}
+.gradient-text-sota{background:linear-gradient(135deg,#D4AF37 0%,#FFD700 40%,#E5E4E2 60%,#D4AF37 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 8s linear infinite}
+@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
+
+.tagline-prestige{font-size:clamp(1.5rem, 5vw, 3.5rem);font-weight:700;color:#94A3B8;letter-spacing:-0.05em;line-height:1}
+
+/* === SOTA BENTO GRID === */
+.bento-grid-sota{display:grid;grid-template-columns:repeat(12, 1fr);gap:1.5rem}
+.bento-card{background:rgba(255,255,255,0.01);backdrop-filter:blur(60px);-webkit-backdrop-filter:blur(60px);border:1px solid rgba(255,255,255,0.04);border-radius:3rem;padding:4rem;transition:all 0.8s cubic-bezier(0.16, 1, 0.3, 1);overflow:hidden;position:relative}
+.bento-card:hover{background:rgba(255,255,255,0.02);border-color:rgba(212,175,55,0.3);transform:scale(1.01) translateY(-5px)}
+
+/* === INTERACTIVE HIGHLIGHTS === */
+.glow-gold{text-shadow: 0 0 40px rgba(212,175,55,0.4)}
+.btn-prestige{background:#D4AF37;color:#020202;font-weight:900;font-size:1.25rem;padding:2rem 6rem;border-radius:100px;transition:all 0.5s cubic-bezier(0.16, 1, 0.3, 1);box-shadow:0 20px 80px rgba(212,175,55,0.2)}
+.btn-prestige:hover{transform:scale(1.1) rotate(-1deg);background:#FFD700;box-shadow:0 30px 100px rgba(212,175,55,0.4)}
+
+/* === ANIMATIONS === */
+.reveal-sota{opacity:0;transform:translateY(150px) scale(0.95)}
+.reveal-sota.visible{opacity:1;transform:translateY(0) scale(1);transition:all 1.5s cubic-bezier(0.16, 1, 0.3, 1)}
+
+#noise{position:fixed;inset:0;z-index:9998;pointer-events:none;opacity:.035;mix-blend-mode:overlay}
+
+@media(max-width:1024px){
+  .headline-huge{font-size:5rem}
+  .bento-grid-sota{display:flex;flex-direction:column}
+}

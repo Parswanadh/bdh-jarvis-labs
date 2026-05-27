@@ -1,0 +1,60 @@
+{
+  "baseline": {
+    "memory_retention": {
+      "100": 0.0005184694193303585,
+      "500": 6.909936343182947e-05,
+      "1000": 3.450322635549271e-05,
+      "2000": 1.9442190327021214e-05
+    },
+    "training_throughput": {
+      "tokens_per_sec": 151492.08658570566,
+      "samples_per_sec": 295.8829816127064,
+      "std_tokens_per_sec": 234.7699740380571
+    },
+    "token_reduction": {
+      "mean_tokens": 99.3972602739726,
+      "median_tokens": 100.0,
+      "std_tokens": 5.114416170773933
+    },
+    "convergence": {
+      "stability": 0.7644476357654425,
+      "loss_variance": 0.30813407382534275,
+      "final_loss": 3.4641952514648438,
+      "convergence_iter": 741
+    },
+    "perplexity": {
+      "perplexity": 290.3071006741749,
+      "cross_entropy_loss": 5.670939330511589,
+      "num_tokens": 3452416
+    }
+  },
+  "multiscale": {
+    "memory_retention": {
+      "100": 0.0004750058054924011,
+      "500": 7.201995596591026e-05,
+      "1000": 3.988484176330359e-05,
+      "2000": 1.7357267532707003e-05
+    },
+    "training_throughput": {
+      "tokens_per_sec": 156311.1131997233,
+      "samples_per_sec": 305.2951429682096,
+      "std_tokens_per_sec": 258.6489913600184
+    },
+    "token_reduction": {
+      "mean_tokens": 99.3972602739726,
+      "median_tokens": 100.0,
+      "std_tokens": 5.114416170773933
+    },
+    "convergence": {
+      "stability": 0.754645473670069,
+      "loss_variance": 0.3251255521837267,
+      "final_loss": 3.5040621757507324,
+      "convergence_iter": 1000
+    },
+    "perplexity": {
+      "perplexity": 276.0818541800625,
+      "cross_entropy_loss": 5.620697394864205,
+      "num_tokens": 3452416
+    }
+  }
+}

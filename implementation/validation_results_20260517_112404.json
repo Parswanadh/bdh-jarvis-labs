@@ -1,0 +1,69 @@
+{
+  "day2_memory": {
+    "description": "State matrix memory comparison (3 scales)",
+    "formula_elementwise": "H * D per scale",
+    "formula_outer_product": "H * D * D per scale"
+  },
+  "day2_ab_comparison": {
+    "ew_state_shape": [
+      4,
+      32,
+      32
+    ],
+    "op_state_shape": [
+      4,
+      32,
+      32
+    ],
+    "ew_off_diagonal_mean": 4.145830644119997e-06,
+    "op_off_diagonal_mean": 4.145830644119997e-06,
+    "op_captures_cross_dim": true,
+    "mean_logit_difference": 0.0
+  },
+  "day2_gradient_flow": {
+    "ew_loss": 7.10239315032959,
+    "ew_grad_norm": 6.772124681564622,
+    "op_loss": 7.10239315032959,
+    "op_grad_norm": 6.772124681564622,
+    "gradient_flow_maintained": true
+  },
+  "day3_sequence_ordering": {
+    "no_rope_diff": 0.35874319076538086,
+    "rope_diff": 0.35874319076538086,
+    "rope_distinguishes_order": true
+  },
+  "day3_position_encoding": {
+    "positions_distinct": true,
+    "max_seq_len": 128,
+    "base_frequency": 10000.0
+  },
+  "day3_reversal": {
+    "forward_vs_reversed_diff": 0.5433574318885803,
+    "distinguishes_reversal": true
+  },
+  "day4_gradient_comparison": {
+    "multiplicative_loss": 7.074609756469727,
+    "multiplicative_grad_norm": 41.81301460713156,
+    "hybrid_loss": 7.039536476135254,
+    "hybrid_grad_norm": 8.886730831373868,
+    "grad_ratio": 0.2125350423754943
+  },
+  "day4_gate_distribution": {
+    "multiplicative": {
+      "saturated_at_0": 0.337890625,
+      "saturated_at_1": 0.33087158203125,
+      "active_range": 0.16241455078125
+    },
+    "hybrid": {
+      "saturated_at_0": 0.337890625,
+      "saturated_at_1": 0.33087158203125,
+      "active_range": 0.16241455078125
+    }
+  },
+  "bug4_vocab_projection": {
+    "teacher_vocab": 151936,
+    "student_vocab": 32000,
+    "projection_params": 94175232,
+    "gradient_flows": false
+  }
+}
