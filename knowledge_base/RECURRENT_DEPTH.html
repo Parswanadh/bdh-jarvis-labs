@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDH Master Class: Recurrent Depth - Looped Inference & ACT</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --sidebar-color: #161b22;
+            --text-color: #c9d1d9;
+            --accent-color: #58a6ff;
+            --border-color: #30363d;
+            --code-bg: #1b1f23;
+            --highlight: #238636;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+        }
+
+        nav {
+            width: 300px;
+            height: 100vh;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            padding: 2rem 1rem;
+            overflow-y: auto;
+        }
+
+        nav h2 {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        nav ul li a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        nav ul li a:hover {
+            color: var(--accent-color);
+        }
+
+        main {
+            margin-left: 320px;
+            padding: 3rem 5rem;
+            max-width: 1000px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-top: 3rem;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            color: #8b949e;
+            margin-top: 2rem;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+        }
+
+        .math-block {
+            background-color: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        .concept-card {
+            background: linear-gradient(145deg, #161b22, #0d1117);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .concept-card strong {
+            color: var(--accent-color);
+        }
+
+        .resource-list {
+            background-color: var(--sidebar-color);
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .resource-list a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .resource-list a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: 4rem;
+            font-size: 0.8rem;
+            color: #484f58;
+            text-align: center;
+            padding-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Contents</h2>
+        <ul>
+            <li><a href="#recurrent-depth">1. Recurrent Depth</a></li>
+            <li><a href="#mythos-amatrix">2. The Mythos A-Matrix</a></li>
+            <li><a href="#looped-inference">3. Looped Inference</a></li>
+            <li><a href="#act">4. Adaptive Computation Time</a></li>
+            <li><a href="#fixed-point">5. Fixed-Point Theory</a></li>
+            <li><a href="#test-time">6. Test-Time Compute</a></li>
+            <li><a href="#stability">7. Training Stability</a></li>
+            <li><a href="#resources">8. Further Reading</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>BDH Master Class: Recurrent Depth - Looped Inference & ACT</h1>
+
+        <section id="recurrent-depth">
+            <h2>1. Concept of Recurrent Depth</h2>
+            <p>Traditional deep learning architectures (like standard Transformers) utilize <strong>Spatial Depth</strong>. In these models, depth is defined by the number of unique layers $\mathcal{L}$. Information flows linearly from layer $l$ to $l+1$, where each layer possesses its own distinct set of weights $W_l$.</p>
+            
+            <div class="concept-card">
+                <strong>The Paradigm Shift:</strong> Recurrent Depth transforms the network from a sequence of unique filters into a <em>dynamical system</em>. Instead of increasing the number of layers to increase capacity, we apply the same transformation repeatedly to the hidden state.
+            </div>
+
+            <p>Recurrent depth treats the model as a function that iterates until a certain state of refinement is reached. This is akin to how humans solve a complex problem: we do not apply a fixed number of "thought layers," but rather iterate on a mental representation until the answer becomes clear.</p>
+        </section>
+
+        <section id="mythos-amatrix">
+            <h2>2. The Mythos A-Matrix</h2>
+            <p>Central to advanced recurrent systems is the <strong>Learnable Decay Matrix</strong>, often referred to as the A-Matrix. Rather than simple additive residuals, the A-Matrix governs the temporal evolution of the state.</p>
+            
+            <div class="math-block">
+                $$\mathbf{h}_{t+1} = A \mathbf{h}_t + f(\mathbf{h}_t, W)$$
+            </div>
+
+            <p>The A-Matrix functions as a <strong>dynamic state-transition matrix</strong>. It determines which components of the hidden state are preserved (eigenvalues $\approx 1$) and which are forgotten (eigenvalues $\approx 0$) across iterations. By making $A$ learnable, the model can optimize its own memory decay rate, effectively learning the "time constant" of its internal reasoning process.</p>
+            
+            <div class="concept-card">
+                <strong>Dynamic Gating:</strong> In high-end implementations, $A$ is not a static matrix but a function of the input $A(\mathbf{x})$, allowing the model to adjust its internal persistence based on the complexity of the prompt.
+            </div>
+        </section>
+
+        <section id="looped-inference">
+            <h2>3. Looped Inference</h2>
+            <p>Looped inference is the mathematical implementation of recurrent depth. In a looped system, we share weights across the temporal dimension of the "thinking" process.</p>
+            
+            <h3>The Mathematical Framework</h3>
+            <p>In a standard feedforward network:
+                $$\mathbf{h}_{l+1} = \sigma(W_l \mathbf{h}_l + \mathbf{b}_l)$$
+            </p>
+            <p>In a looped inference system (like a Universal Transformer), the weights are tied:
+                $$\mathbf{h}_{t+1} = \sigma(W \mathbf{h}_t + \mathbf{b}, \mathbf{x})$$
+            </p>
+            
+            <div class="math-block">
+                $$\mathbf{h}_{T} = f^{(T)}(\mathbf{h}_0, W)$$
+                where $f^{(T)}$ denotes the function $f$ composed with itself $T$ times.
+            </div>
+
+            <p>This approach drastically reduces the parameter count while potentially increasing the expressive power of the network, as the model can theoretically simulate a network of arbitrary depth $T$ using only the weights of a single layer.</p>
+        </section>
+
+        <section id="act">
+            <h2>4. Adaptive Computation Time (ACT)</h2>
+            <p>A critical flaw in fixed-loop inference is the "one size fits all" problem: some tokens (e.g., "the") require minimal processing, while others (e.g., "quantum") require deep reasoning. ACT allows the model to decide <em>when to stop</em>.</p>
+            
+            <h3>The Halting Architecture</h3>
+            <p>The halting probability $h_t$ is not a simple linear projection, but the output of a specialized MLP designed to analyze the state's stability. The architecture typically follows:</p>
+            <div class="math-block">
+                $$\mathbf{h}_t \rightarrow \text{Linear} \rightarrow \text{ReLU} \rightarrow \text{Linear} \rightarrow \text{Sigmoid} \rightarrow h_t$$
+            </div>
+            <p>This non-linearity allows the model to identify complex patterns in the hidden state that signal "convergence" or "completion" of the thought process.</p>
+            
+            <h3>ACT Reality Check: Batch-Wide Averaging</h3>
+            <p>While the theoretical framework suggests a per-token sum $\sum h_t \ge 1$, this leads to massive instability and "jitter" in GPU utilization during training. In robust production implementations, a <strong>Batch-Wide Average Halting</strong> mechanism is used.</p>
+            <div class="concept-card">
+                <strong>The Mechanism:</strong> Instead of stopping individual tokens, the system calculates the average halting probability across the entire sequence batch. The loop terminates when the <em>mean</em> confidence across the batch reaches the threshold. This ensures synchronized tensor operations and stabilizes the gradient flow during backpropagation through time (BPTT).
+            </div>
+            
+            <h3>The Pondering Mechanism</h3>
+            <p>To ensure the model doesn't just stop immediately to minimize loss, a <strong>ponder cost</strong> is added to the objective function, penalizing the model for each additional step of computation:</p>
+            
+            <div class="math-block">
+                $$\mathcal{L}_{total} = \mathcal{L}_{task} + \lambda \sum_{t=1}^{N} p_t$$
+                where $p_t$ is the probability that the model is still pondering at step $t$.
+            </div>
+        </section>
+
+        <section id="fixed-point">
+            <h2>5. Fixed-Point Theory</h2>
+            <p>Recurrent depth is fundamentally an attempt to find a <strong>Fixed Point</strong> of the transformation $f$. In the limit of infinite depth, the model seeks a state $\mathbf{h}^*$ such that:</p>
+            <div class="math-block">
+                $$\mathbf{h}^* = f(\mathbf{h}^*, W)$$
+            </div>
+            <p><strong>Fixed-Point Convergence</strong> occurs when the updates to the hidden state $\Delta \mathbf{h} = \| \mathbf{h}_{t+1} - \mathbf{h}_t \|$ fall below a small epsilon $\epsilon$. In the context of reasoning, this convergence represents the model reaching a logical conclusion where further "thinking" no longer changes the answer.</p>
+            <p>This relates directly to <em>Deep Equilibrium Models (DEQ)</em>, which skip the iterations entirely and use root-finding algorithms (like Broyden's method) to jump directly to the fixed point $\mathbf{h}^*$.</p>
+        </section>
+
+        <section id="test-time">
+            <h2>6. Test-Time Compute</h2>
+            <p>The "o1 paradigm" highlights a fundamental discovery: reasoning quality scales with the amount of compute spent at inference time, not just during training.</p>
+            
+            <div class="concept-card">
+                <strong>The Inference Scaling Law:</strong> If a model is trained with recurrent depth or CoT (Chain of Thought), increasing the loop depth $T$ at test time (without changing weights) can lead to a monotonic increase in performance on complex logic tasks.
+            </div>
+            
+            <h3>Latent Loops vs. Discrete Loops</h3>
+            <p>It is critical to distinguish between internal recurrent depth and external chain-of-thought:</p>
+            
+            <div class="concept-card">
+                <strong>Latent Loops (Internal):</strong> Iterations happen within the hidden state vectors.
+                <ul>
+                    <li><strong>Pros:</strong> Extremely fast, high bandwidth, no token cost, dense information flow.</li>
+                    <li><strong>Cons:</strong> Opaque (black box), harder to debug, susceptible to vanishing gradients.</li>
+                </ul>
+            </div>
+            
+            <div class="concept-card">
+                <strong>Token Loops (Discrete/CoT):</strong> Iterations are written as text tokens.
+                <ul>
+                    <li><strong>Pros:</strong> Fully interpretable, leverages the KV cache for "working memory," easy to prompt-engineer.</li>
+                    <li><strong>Cons:</strong> Slow (auto-regressive), consumes context window, sparse (limited by vocabulary).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="stability">
+            <h2>7. Training Stability</h2>
+            <p>Training recurrent loops is notoriously difficult due to the <strong>Vanishing and Exploding Gradient</strong> problems. Because the same matrix $W$ is multiplied repeatedly, the gradients $\frac{\partial \mathbf{h}_T}{\partial \mathbf{h}_0}$ involve $W^T$.</p>
+            
+            <h3>Regularization Strategies</h3>
+            <ol>
+                <li><strong>Weight Tying & Normalization:</strong> Use LayerNorm or RMSNorm at every iteration to keep the hidden state magnitude stable.</li>
+                <li><strong>Residual Connections:</strong> Instead of $\mathbf{h}_{t+1} = f(\mathbf{h}_t)$, use $\mathbf{h}_{t+1} = \mathbf{h}_t + f(\mathbf{h}_t)$. This ensures that the identity mapping is the default, preventing signal decay.</li>
+                <li><strong>Gradient Clipping:</strong> Hard-limiting the norm of the gradient to prevent "spikes" during the backward pass through the loop.</li>
+                <li><strong>Stochastic Depth:</strong> Randomly skipping iterations during training to force the model to be robust to varying loop depths.</li>
+            </ol>
+        </section>
+
+        <section id="resources">
+            <h2>8. Further Reading</h2>
+            <div class="resource-list">
+                <p><strong>Primary Research Papers:</strong></p>
+                <ul>
+                    <li><a href="https://arxiv.org/abs/1609.04537" target="_blank">Adaptive Computation Time for Recurrent Neural Networks (Graves, 2016)</a></li>
+                    <li><a href="https://arxiv.org/abs/1807.03819" target="_blank">Universal Transformers (Dehghani et al., 2018)</a></li>
+                    <li><a href="https://arxiv.org/abs/2302.04627" target="_blank">Deep Equilibrium Models (DEQ) - The limit of infinite depth</a></li>
+                </ul>
+                <p><strong>Key Concepts to Explore:</strong></p>
+                <ul>
+                    <li>Fixed-point iteration in Neural Networks</li>
+                    <li>The relation between RNNs and Turing Machines</li>
+                    <li>Test-time compute scaling laws</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            &copy; 2026 BDH Intelligence Specialist - Recursive Depth Series. All rights reserved.
+        </footer>
+    </main>
+
+</body>
+</html>

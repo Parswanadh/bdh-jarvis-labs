@@ -1,0 +1,32 @@
+{
+  "device": "cpu",
+  "samples": 50,
+  "max_len": 192,
+  "bdh": {
+    "checkpoint": "checkpoints/safe/laptop_safe.pt",
+    "step": 17092,
+    "perplexity": 68.25777475967601,
+    "loss": 4.223291343469835,
+    "logic_score": 20
+  },
+  "baselines": [
+    {
+      "name": "distilgpt2",
+      "model_id": "distilgpt2",
+      "perplexity": 33.86649910626852,
+      "loss": 3.5224262988144805,
+      "logic_score": 20,
+      "elapsed_sec": 6.516118049621582,
+      "model_card_notes": {
+        "model_id": "distilgpt2",
+        "weak_markers": [
+          "small-82m",
+          "reported-wikitext103-ppl-21.1"
+        ],
+        "card_fetched": true
+      },
+      "bdh_beats_on_ppl": false,
+      "bdh_beats_on_logic": true
+    }
+  ]
+}

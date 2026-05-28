@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDH Master Class: Training Engineering - BBPE & Distillation</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --sidebar-bg: #161b22;
+            --text-color: #c9d1d9;
+            --accent-color: #58a6ff;
+            --border-color: #30363d;
+            --code-bg: #1b1f23;
+            --highlight: #238636;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+        }
+        aside {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 20px;
+        }
+        main {
+            margin-left: 340px;
+            padding: 40px;
+            max-width: 900px;
+        }
+        h1, h2, h3 {
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .math-block {
+            background: var(--code-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .concept-card {
+            border-left: 4px solid var(--highlight);
+            background: var(--sidebar-bg);
+            padding: 15px;
+            margin: 20px 0;
+        }
+        code {
+            background: var(--code-bg);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            color: #ff7b72;
+        }
+        .nav-link {
+            display: block;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: var(--accent-color);
+        }
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <aside>
+        <h3>Contents</h3>
+        <a href="#bbpe" class="nav-link">Byte-Level BPE (BBPE)</a>
+        <a href="#distillation" class="nav-link">Knowledge Distillation</a>
+        <a href="#projection" class="nav-link">Vocabulary Projection</a>
+        <a href="#autonomous" class="nav-link">Autonomous Improvement</a>
+        <a href="#resources" class="nav-link">Further Reading</a>
+    </aside>
+    <main>
+        <h1>BDH Master Class: Training Engineering - BBPE & Distillation</h1>
+        
+        <section id="bbpe">
+            <h2>1. Byte-Level BPE (BBPE)</h2>
+            <p>Traditional Byte Pair Encoding (BPE) operates on Unicode characters, which leads to massive vocabularies or the dreaded <code>&lt;UNK&gt;</code> (Out-of-Vocabulary) token. BBPE solves this by applying the BPE algorithm to <strong>raw bytes</strong> (UTF-8).</p>
+            
+            <div class="concept-card">
+                <strong>The OOV Solution:</strong> Since every string is ultimately a sequence of bytes (0-255), the base vocabulary is fixed at 256. Any sequence of characters can be decomposed into these base bytes, ensuring that the model <em>never</em> encounters a token it cannot represent.
+            </div>
+
+            <h3>UTF-8 Multi-Byte Handling</h3>
+            <p>A critical challenge in BBPE is the handling of multi-byte UTF-8 characters (e.g., emojis or non-Latin scripts). To prevent the tokenizer from splitting a single character into semantically meaningless byte-fragments, BDH utilizes <strong>Byte-Boundary Constraints</strong>.</p>
+            <p>The merge rules are prioritized such that bytes belonging to the same UTF-8 codepoint are merged first. This ensures that the resulting subword tokens maintain a one-to-one mapping with the original character semantics, preventing "broken" characters during decoding.</p>
+
+            <h3>The Math of Merge Rules</h3>
+            <p>BBPE iteratively merges the most frequent pair of adjacent tokens. Let $V$ be the current vocabulary. We identify the pair $(t_i, t_j)$ that maximizes the frequency count across the training corpus $C$:</p>
+            <div class="math-block">
+                $$\text{pair}_{best} = \arg\max_{(t_i, t_j) \in V^2} \text{Count}(t_i, t_j, C)$$
+            </div>
+            <p>A new token $t_{new} = \text{merge}(t_i, t_j)$ is added to $V$, and all occurrences of $(t_i, t_j)$ are replaced by $t_{new}$. This increases the average token length, reducing the sequence length $L$ passed to the Transformer, which quadratically reduces attention complexity $O(L^2)$.</p>
+        </section>
+
+        <section id="distillation">
+            <h2>2. Knowledge Distillation</h2>
+            <p>Knowledge Distillation (KD) transfers "dark knowledge" from a large, high-capacity <strong>Teacher</strong> model to a smaller, efficient <strong>Student</strong> model.</p>
+
+            <h3>SFT vs. Logit Matching</h3>
+            <p>In theory, the gold standard for distillation is <strong>Logit Matching</strong>, where the student attempts to replicate the teacher's full probability distribution across the entire vocabulary. However, in the current BDH implementation, <strong>Supervised Fine-Tuning (SFT)</strong> is used as a proxy.</p>
+            <div class="concept-card">
+                <strong>The SFT Proxy:</strong> Instead of matching the raw logits, the student is trained on "gold" text generated by the teacher. While this captures the teacher's most likely output, it loses the "dark knowledge" (the relative probabilities of incorrect classes) found in the logit distribution.
+            </div>
+
+            <h3>Teacher-Student Framework (Logit Matching)</h3>
+            <p>For full distillation, the student minimizes a loss function that includes the teacher's soft-max output (logits):</p>
+            
+            <div class="math-block">
+                $$L = (1 - \alpha) L_{CE}(y, \sigma(z_s)) + \alpha \tau^2 L_{KL}(\sigma(z_t/\tau), \sigma(z_s/\tau))$$
+            </div>
+            <p>Where $\tau$ is the <strong>Temperature</strong>. During distillation, $\tau$ is typically kept constant to maintain the smoothness of the distribution, though some schedules decay $\tau$ to sharpen the student's predictions toward the end of training.</p>
+        </section>
+
+        <section id="projection">
+            <h2>3. Vocabulary Projection</h2>
+            <p>A critical engineering challenge arises when the Teacher and Student use different vocabularies ($V_t \neq V_s$). We cannot directly compute KL-Divergence if the logit vectors have different dimensions.</p>
+            
+            <div class="concept-card">
+                <strong>The Low-Rank Projection Matrix $W_{proj}$:</strong> To bridge this gap, we implement a projection matrix $W_{proj} \in \mathbb{R}^{|V_t| \times |V_s|}$ that maps teacher logits into the student's space.
+            </div>
+            <div class="math-block">
+                $$\hat{z}_t = W_{proj} z_t$$
+            </div>
+            <p><strong>The Alignment Strategy:</strong> $W_{proj}$ is initialized using <em>Embedding Alignment</em>. If token $T_i$ (teacher) and $S_j$ (student) represent the same byte-sequence, the weight $W_{i,j}$ is set to 1. For non-overlapping tokens, the weights are initialized as the cosine similarity between the teacher and student embeddings for those tokens, ensuring that semantic proximity is preserved even when exact token matches are absent.</p>
+        </section>
+
+        <section id="autonomous">
+            <h2>4. Autonomous Improvement</h2>
+            <p>Modern training pipelines employ a self-evolving loop to move beyond static datasets.</p>
+            
+            <ol>
+                <li><strong>Curated Data Generation:</strong> The model generates multiple candidate responses for a prompt.</li>
+                <li><strong>Confidence Scoring:</strong> A reward model or the teacher model assigns a confidence score $S$ to each response.
+                    <div class="math-block">
+                        $$S = \frac{\exp(z_{best})}{\sum \exp(z_i)}$$
+                    </div>
+                </li>
+                <li><strong>Safety-Gated Updates:</strong> Responses are filtered through a safety classifier. Only high-confidence, safe examples are added to the fine-tuning set.</li>
+                <li><strong>Recursive Training:</strong> The model is retrained on this "synthetic-gold" dataset.</li>
+            </ol>
+
+            <h3>The Risk of Distribution Collapse</h3>
+            <p>A primary danger in recursive self-improvement is <strong>Model Collapse</strong>. When a model is trained on its own generated output, it begins to lose the "tail" of the distribution—the rare but correct examples. Mathematically, the variance of the generated distribution $\sigma_{gen}^2$ becomes smaller than the variance of the natural distribution $\sigma_{nat}^2$.</p>
+            <div class="concept-block">
+                <strong>Mitigation:</strong> To prevent collapse, BDH maintains a "Ground Truth Anchor" set—a fixed percentage of human-curated data that is mixed into every recursive training cycle to ensure the model remains tethered to real-world semantics.
+            </div>
+        </section>
+
+        <section id="resources">
+            <h2>Further Reading</h2>
+            <ul>
+                <li><strong>GPT-2 Tokenizer (BPE):</strong> <a href="https://openai.com/blog/better-language-model-tokenizers/" style="color: var(--accent-color);">OpenAI Blog - Better Language Model Tokenizers</a></li>
+                <li><strong>Distilling the Knowledge in a Neural Network:</strong> <a href="https://arxiv.org/abs/1503.02531" style="color: var(--accent-color);">Hinton et al. (2015) - arXiv:1503.02531</a></li>
+            </ul>
+        </section>
+
+        <div class="footer">
+            &copy; 2026 BDH Engineering Wiki | Confidential - Internal Use Only
+        </div>
+    </main>
+</body>
+</html>
